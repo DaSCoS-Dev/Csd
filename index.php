@@ -283,7 +283,7 @@ $message .= <<<EOF
 	path info {$_SERVER["PATH_INFO"]}<br>
 EOF
 ;
-symple_send_mail( "support@fattureweb.com", "hdesk@dascos.info", "Errore nel codice {$GLOBALS["_SERVER"]["HTTP_HOST"]}!", $message );
+symple_send_mail( "from@email", "to@email", "Error in {$GLOBALS["_SERVER"]["HTTP_HOST"]} code!", $message );
 }
 
 function getClientIP( ) {
@@ -297,7 +297,7 @@ function getClientIP( ) {
 	return '';
 }
 
-function symple_send_mail( $from = "dascos@pec.it", $to = "dascos@pec.it", $subject = "", $body = "", $allegati = array() ) {
+function symple_send_mail( $from = "your@email", $to = "default_to@email", $subject = "", $body = "", $allegati = array() ) {
 	require_once "{$_SERVER['DOCUMENT_ROOT']}/application/third_party/Mail.php";
 	require_once "{$_SERVER['DOCUMENT_ROOT']}/application/third_party/Mail/mime.php";
 
@@ -311,8 +311,8 @@ function symple_send_mail( $from = "dascos@pec.it", $to = "dascos@pec.it", $subj
 			'host' => '',
 			'port' => '25',
 			'auth' => true,
-			'username' => '', // your gmail account
-			'password' => '', // your password
+			'username' => '', // your email account
+			'password' => '', // your email password
 			"debug" => false
 	) );
 	$nohtml = strip_tags( $body );
