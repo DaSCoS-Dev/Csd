@@ -11,11 +11,11 @@ if (! defined( "BASEPATH" )) {
 /**
  * 
  * @package models
- * @subpackage {$model_name}
+ * @subpackage {$library_name_U}
  * @author Da.S.Co.S.
  * @link http://www.dascos.info
  */
-class Model_{$model_name} extends Super_model {
+class Model_{$library_name_L} extends Super_model {
 
 	public function __construct( \$params = null ) {
 		\$this->table_name = "{$table_name}";
@@ -44,7 +44,7 @@ class Model_{$model_name} extends Super_model {
 			{\$this->default_order_by}
 		";
 		\$query_resource = \$this->db->query( \$sql );
-		return \$query_resource->result( "object" );
+		return \$query_resource->result( "{$library_name_U}" );
 	}
 
 	protected function _get_record_by_index( \$index_values = array() ) {
@@ -65,7 +65,7 @@ class Model_{$model_name} extends Super_model {
 			{\$this->default_order_by}
 		";
 		\$query_resource = \$this->db->query( \$sql );
-		return \$query_resource->result( "object" );
+		return \$query_resource->result( "{$library_name_U}" );
 	}
 	
 	protected function _save_( \$record ) {
@@ -79,10 +79,10 @@ class Model_{$model_name} extends Super_model {
 		\$primary_index_names = \$this->get_primary_key();
 		\$orderQuery = \$this->build_where_from_record(\$record, \$this->index_structure["PRIMARY"]);
 		// Check the transaction ID to see if the order needs an insert or update
-		\$existingRecord = \$this->db->get_where( \$this->table_c, \$orderQuery, 1, 0 );
+		\$existingRecord = \$this->db->get_where( \$this->table_name, \$orderQuery, 1, 0 );
 		// If it exists, get the ID and do an update
 		if (\$existingRecord->num_rows > 0) {
-			\$result = \$this->db->update( \$this->table_c, \$record, \$orderQuery );
+			\$result = \$this->db->update( \$this->table_name, \$record, \$orderQuery );
 			if (\$result) {
 				return \$record [\$this->index_structure["PRIMARY"][0]];
 			} else {
@@ -97,7 +97,7 @@ class Model_{$model_name} extends Super_model {
 		\$this->clean_record(\$record);
 		\$primary_index_names = \$this->get_primary_key();
 		\$orderQuery = \$this->build_where_from_record(\$record, \$this->index_structure["PRIMARY"]);
-		\$result = \$this->db->delete( \$this->table_c, \$orderQuery );
+		\$result = \$this->db->delete( \$this->table_name, \$orderQuery );
 		if (\$result) {
 			return true;
 		} else {

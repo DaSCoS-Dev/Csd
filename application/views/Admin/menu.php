@@ -20,11 +20,6 @@ $output = <<<EOF
 					<button type="button" class="btn" id="admin_new_functionality_actions" onclick="xajax_execute('Admin/Main_admin', 'create_new_functionality_form')">Build New Function</button>
 				</span>
 			</li>
-			<li>
-				<span class="dropdown-item" id="admin_test_1" data-bs-toggle="collapse" data-bs-target=".navbar-collapse.show">
-					<button type="button" class="btn" id="admin_test_actions_1" onclick="xajax_execute('Articoli/Main_articoli', 'list_record')">Test lista_articoli</button>
-				</span>
-			</li>
           </ul>
         </li>
       </ul>
