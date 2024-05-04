@@ -55,13 +55,20 @@ class Super_lib {
 		}
 	}
 
-	public function load_class( $class_name ) {
-		require_once ( "{$_SERVER['DOCUMENT_ROOT']}/application/classes/{$class_name}.php" );
-		if (! is_a( $this, "super_lib" )) {
-			return new $class_name( $this->super_lib );
-		} else {
-			return new $class_name( $this );
+	public function load_class($class_name) {
+		$subdir = "";
+		if (stripos ( $class_name, "/" ) !== false) {
+			$parts = explode ( "/", $class_name );
+			if (sizeof ( $parts ) > 2) {
+				$class_name = array_pop($parts);
+				$subdir = implode("/", $parts) . "/";
+			} else {
+				$subdir = "{$parts[0]}/";
+				$class_name = $parts [1];
+			}
 		}
+		require_once (BASE_APPLICATION_PATH . "/classes/{$subdir}{$class_name}.php");
+		return new $class_name (  );
 	}
 
 	protected function set_local_storage( $id = 0 ) {
@@ -289,7 +296,6 @@ class Super_lib {
 		$this->set_local_storage( $this->profilo_utente->ID );
 		// Per test, attualmente
 		return $this->response;
-		$this->send_fake_page( $lib, $method );
 	}
 
 	protected function tentativo_hacking( ) {
@@ -323,33 +329,6 @@ class Super_lib {
 		} elseif (file_exists( "{$GLOBALS["_SERVER"]["DOCUMENT_ROOT"]}/application/libraries/Views_assembler/{$sections[0]}/{$view_assembler}.php" )) {
 			$this->load->library( "Views_assembler/{$sections[0]}/{$view_assembler}" );
 		}
-	}
-
-	private function send_fake_page( $lib = "", $meth = "" ) {
-		// Es lib = main_newsletters, meth = lista_newsletters
-		// Prendo buono tutto, assemblo così com'è e spedisco a Google...però se sono DEV no, perchè non mi interessa, per ora
-		if (! $this->is_live()) {
-			return;
-		}
-		if (stripos( $meth, "lista" ) !== false or stripos( $meth, "grafici" ) !== false or stripos( $meth, "land" ) !== false or stripos( $meth, "get_register" ) !== false) {
-			$fake_page = "{$lib}/{$meth}.html";
-			$this->invia_evento_google( "event", "page_view", array (
-					"page_title" => "{$meth}",
-					"page_location" => "{$fake_page}" 
-			) );
-		}
-	}
-
-	final protected function invia_evento_google( $tipo = "event", $evento = "page_view", $dati = Array() ) {
-		if (sizeof( $dati ) == 0) {
-			return true;
-		}
-		$dati_google = array ();
-		foreach ( $dati as $key => $value ) {
-			$dati_google [ ] = "'{$key}' : '{$value}' ";
-		}
-		$dati_serializzati = implode( ",", $dati_google );
-		$this->response->script( "gtag('{$tipo}', '{$evento}', { $dati_serializzati } );" );
 	}
 
 	final public function check_logged_in( ) {
@@ -620,7 +599,7 @@ class Super_lib {
 					function() {
 						$('#show_records_wrapper').hide('blind', 
 							function() {
-								$('#edit_record').show('blind') 
+								$('#edit_record_wrapper').show('blind') 
 							}
 						)
 					}, {$timeout}
@@ -639,7 +618,7 @@ class Super_lib {
 		$this->response->script( "
 				setTimeout(
 					function() {
-						$('#edit_record').hide('blind',
+						$('#edit_record_wrapper').hide('blind',
 							function() {
 								$('#show_records_wrapper').show('blind');
 								redraw_data_table('show_records');
@@ -722,6 +701,10 @@ class Super_lib {
 		// Send the mail
 		$mail = $smtp->send( $to, $headers, $body );
 		return $mail;
+	}
+	
+	protected function parseRecord(&$record){
+		return true;
 	}
 }
 ?>

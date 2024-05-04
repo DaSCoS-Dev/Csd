@@ -17,6 +17,7 @@ class main_object{
 				$this->model = $this->super_lib->{$this::model_name};				
 			}
 			$this->struct = $this->model->get_table_header();
+			$this->super_lib->load->helper ( "date" );
 		}
 	}
 }

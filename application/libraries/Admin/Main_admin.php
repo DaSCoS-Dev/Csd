@@ -237,7 +237,7 @@ class Main_admin extends Super_lib {
 	 * 
 	 * @param array $input        	
 	 */
-	protected function create_new_functionality( $input ) {
+	protected function create_new_functionality( $input, $force = false ) {
 		// No check is done cause there are no "custom fields", except the existance of at least a model
 		if (! isset( $input [ "discriminator" ] ) or $input [ "discriminator" ] !== "functionality") {
 			$this->error( "You have an error in the form. Please try again and ensure the field \'discriminator\' is present", "Error", 4000 );
@@ -251,16 +251,9 @@ class Main_admin extends Super_lib {
 			return false;
 		}
 		$just_done = $this->check_for_functionality( $stream, $input [ "functionality_table" ] );
-		if (! $just_done) {
-			// Take the parameters, build the table structure, create the default objects to manipulate the table
-			$key_array = array (
-					"PRIMARY" => array (
-							"ID" => "pippo",
-							"ID_Utente" => "pluto",
-							"Codice_Inesistente" => "paperino"
-					) 
-			);
-			$records = $this->model->get_record( $key_array, "record_by_primary" );
+		if (! $just_done or $force) {
+			// Take the templates and create the structure!!
+			$this->buildFunctionalityStructure($input [ "functionality_table" ]);
 		} else {
 			$this->error( "The chosen table has already been used to create the basic structures therefore it is not possible to reuse it", "Error", 4000 );
 			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'create_new_functionality_form') } , 4100 ) " );
@@ -272,6 +265,40 @@ class Main_admin extends Super_lib {
 	 * PRIVATE FUNCTIONS
 	 */
 	
+	private function buildFunctionalityStructure($table_name){
+		$library_name_U = ucfirst(strtolower($table_name));
+		$library_name_L = strtolower($library_name_U);
+		// AjaxRequests
+		$ajax_def = $this->load->view( "Templates/AjaxRequests/default.php", array (
+				"library_name_U" => $library_name_U,
+				"library_name_L" => $library_name_L,
+		), true );
+		// Classes
+		$class_def = $this->load->view( "Templates/Classes/default.php", array (
+				"library_name_U" => $library_name_U,
+				"library_name_L" => $library_name_L,
+		), true );
+		// Libraries
+		$lib_def = $this->load->view( "Templates/Libraries/default.php", array (
+				"library_name_U" => $library_name_U,
+				"library_name_L" => $library_name_L,
+		), true );
+		// Models
+		$model_def = $this->load->view( "Templates/Models/default.php", array (
+				"library_name_U" => $library_name_U,
+				"library_name_L" => $library_name_L,
+				"table_name" => $table_name,
+		), true );
+		// Views
+		$view_struct_def = $this->load->view( "Templates/Views/general_structure.php", array (), true );
+		$table_struct_def = $this->load->view( "Templates/Views/table_structure.php", array (), true );
+		// Views_assembler
+		$views_assembler_def = $this->load->view( "Templates/Views_assembler/default.php", array (
+				"library_name_U" => $library_name_U,
+				"library_name_L" => $library_name_L,
+		), true );
+		// Save generated templates....
+	}
 	/**
 	 * Check if, inside the relative "configuratios file", we already have this table
 	 * 
