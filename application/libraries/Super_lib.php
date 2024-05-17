@@ -67,7 +67,7 @@ class Super_lib {
 				$class_name = $parts [1];
 			}
 		}
-		require_once (BASE_APPLICATION_PATH . "/classes/{$subdir}{$class_name}.php");
+		require_once ("{$_SERVER['DOCUMENT_ROOT']}/{$GLOBALS["application_folder"]}/classes/{$subdir}{$class_name}.php");
 		return new $class_name (  );
 	}
 
@@ -621,7 +621,7 @@ class Super_lib {
 						$('#edit_record_wrapper').hide('blind',
 							function() {
 								$('#show_records_wrapper').show('blind');
-								redraw_data_table('show_records');
+								//redraw_data_table('show_records');
 							}
 						)
 					}, {$timeout}
@@ -629,6 +629,29 @@ class Super_lib {
 				" );
 	}
 
+	protected function chooseTableHeaderVisibility($header, $idx, &$visibility_options){
+		$column_name = $header["name"];
+		$def = explode(",", $header["definition"]);
+		// h = hidden (do not show neither column name nor column value)
+		if (array_search("h", $def) !== false){
+			$visibility_options[] = "{ visible: false, target: {$idx}, searchable: false }";
+		}
+	}
+	
+	protected function extractOrderNumberFromTableDefinition($definition) {
+		preg_match('/o:(\d+)/', $definition, $matches);
+		return isset($matches[1]) ? (int) $matches[1] : PHP_INT_MAX; // Utilizza PHP_INT_MAX se non è presente un numero
+	}
+	
+	protected function chooseTableHeaderOrder(&$tableHeads){
+		usort($tableHeads, function($a, $b) {
+			$orderA = $this->extractOrderNumberFromTableDefinition($a['definition']);
+			$orderB = $this->extractOrderNumberFromTableDefinition($b['definition']);
+			return $orderA <=> $orderB; // Ordinamento ascendente
+		});
+		return $tableHeads;
+	}
+	
 	protected function initialized( ) {
 		$globali = $GLOBALS [ "lib_caricate" ];
 		return $GLOBALS [ "lib_caricate" ] [ get_class( $this ) ];

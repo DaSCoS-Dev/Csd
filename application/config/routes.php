@@ -46,5 +46,6 @@ $route["404_override"] = "";
 
 $route["admin/(:any)"] = "admin";
 $route["auth/(:any)"] = "admin";
+$route["ajax/(:any)"] = "ajax_requests/$1";
 /* End of file routes.php */
 /* Location: ./application/config/routes.php */

@@ -261,7 +261,7 @@ class CI_Router {
 	 * @param	array
 	 * @return	array
 	 */
-	function _validate_request($segments)
+	function _validate_request(&$segments, $notFirstRun = false)
 	{
 		if (count($segments) == 0)
 		{
@@ -278,7 +278,7 @@ class CI_Router {
 		if (is_dir(APPPATH.'controllers/'.$segments[0]))
 		{
 			// Set the directory and remove it from the segment array
-			$this->set_directory($segments[0]);
+			$this->set_directory($segments[0], $notFirstRun);
 			$segments = array_slice($segments, 1);
 
 			if (count($segments) > 0)
@@ -286,6 +286,11 @@ class CI_Router {
 				// Does the requested controller exist in the sub-folder?
 				if ( ! file_exists(APPPATH.'controllers/'.$this->fetch_directory().$segments[0].'.php'))
 				{
+					if (sizeof($segments) > 1){
+						$curDir = $this->fetch_directory();
+						$segments[0] = "{$curDir}{$segments[0]}";
+						return $this->_validate_request($segments, true);
+					}
 					if ( ! empty($this->routes['404_override']))
 					{
 						$x = explode('/', $this->routes['404_override']);
@@ -467,9 +472,13 @@ class CI_Router {
 	 * @param	string
 	 * @return	void
 	 */
-	function set_directory($dir)
+	function set_directory($dir, $notFirstRun = false)
 	{
-		$this->directory = str_replace(array('/', '.'), '', $dir).'/';
+		if ($notFirstRun){
+			$this->directory = str_replace( '.', '', $dir).'/';
+		} else {
+			$this->directory = str_replace(array('/', '.'), '', $dir).'/';
+		}
 	}
 
 	// --------------------------------------------------------------------

@@ -36,12 +36,15 @@ class Main_{$library_name_L}_views extends CI_View_assembler {
 	
 	protected function edit_structure( \$object ) {
 		return \$this->load->view( "{$library_name_U}/edit_structure", array (
-				"obect" => \$object 
+				"id" => \$object
 		), true );
+	}
+	
+	protected function groupFields(\$object){
+		return \$this->buildEditView(\$object);
 	}
 }
 ?>
-
 EOF
 ;
 print $class_code;

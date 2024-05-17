@@ -86,7 +86,7 @@ class Main_admin_views extends CI_View_assembler {
 		foreach ($definitions["tables"] as $table){
 			$options .= $this->form_select_element($table->$column_name, $table->$column_name);
 		}
-		$form .= $this->form_select("1", "functionality_table", $options);
+		$form .= $this->form_select("1", "functionality_table", $options, "Select the Table to use");
 		// Submit button
 		$form .= $this->form_button_submit("submit_functionality", "Create Functionality", "Create Functionality", "onclick=\"xajax_execute('Admin/Main_admin', 'create_new_functionality', xajax.getFormValues('config_form_functionality', true));\"");
 		// Close the form

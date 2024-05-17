@@ -19,6 +19,7 @@ class Model_{$library_name_L} extends Super_model {
 
 	public function __construct( \$params = null ) {
 		\$this->table_name = "{$table_name}";
+		\$this->loadClass();
 		parent::__construct( \$params );
 	}
 
@@ -26,6 +27,22 @@ class Model_{$library_name_L} extends Super_model {
 	 * PROTECTED functions
 	 */
 	
+	 protected function _get_{$library_name_L}( \$iden = null, \$start = 0, \$limit = 999999, \$count = false ) {
+		\$limits = "";
+		if (\$count) {
+			\$head_query = \$this->head_query_count_{$library_name_L}();
+		} else {
+			\$head_query = \$this->head_query_{$library_name_L}();
+			\$limits = " LIMIT {\$start}, {\$limit} ";
+		}
+		\$sql = "
+		{\$head_query}
+		{\$limits}
+		";
+		\$query_resource = \$this->db->query( \$sql );
+		return \$query_resource->result( "{$library_name_U}" );
+	}
+	 
 	protected function _get_record_by_primary( \$index_values = array() ) {
 		\$primary_index_names = \$this->get_primary_key();
 		\$check = \$this->do_index_consistency_check(\$primary_index_names, \$index_values);
@@ -104,10 +121,33 @@ class Model_{$library_name_L} extends Super_model {
 			return false;
 		}
 	}
+	
+	private function loadClass(){
+		\$CI = & get_instance();
+		\$this->databaseTables = \$CI->Super_model->databaseTables;
+		\$CI->super_lib->load_class("{$library_name_U}/{$library_name_L}");
+	}
+				
+	private function head_query_count_{$library_name_L}( ) {
+		\$primary_index_names = \$this->get_primary_key();
+		\$primary_column = \$primary_index_names[0]->Column_name;
+		return "
+		SELECT
+			COUNT(`tbl`.`{\$primary_column}`) AS `{$library_name_L}_total`
+		FROM
+			`{\$this->table_name}` as `tbl` ";
+	}
 
+	private function head_query_{$library_name_L}( ) {
+		return "
+		SELECT
+			`tbl`.*
+		FROM
+			`{\$this->table_name}` as `tbl` ";
+	}
+	
 }
 ?>
-
 EOF
 ;
 print $class_code;

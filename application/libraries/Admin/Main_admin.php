@@ -259,6 +259,7 @@ class Main_admin extends Super_lib {
 			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'create_new_functionality_form') } , 4100 ) " );
 			return false;
 		}
+		$this->message("Functionality has been built right now!", "Success");
 	}
 
 	/**
@@ -273,31 +274,45 @@ class Main_admin extends Super_lib {
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L,
 		), true );
+		mkdir("{$_SERVER["DOCUMENT_ROOT"]}/application/controllers/ajax_requests/{$library_name_U}/", 0755, true);
+		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/controllers/ajax_requests/{$library_name_U}/ajax_{$library_name_L}.php", $ajax_def);
 		// Classes
 		$class_def = $this->load->view( "Templates/Classes/default.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L,
 		), true );
+		mkdir("{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/", 0755, true);
+		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/{$library_name_L}.php", $class_def);
 		// Libraries
 		$lib_def = $this->load->view( "Templates/Libraries/default.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L,
 		), true );
+		mkdir("{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/{$library_name_U}/", 0755, true);
+		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/{$library_name_U}/Main_{$library_name_L}.php", $lib_def);
 		// Models
 		$model_def = $this->load->view( "Templates/Models/default.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L,
 				"table_name" => $table_name,
 		), true );
+		mkdir("{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$library_name_U}/", 0755, true);
+		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$library_name_U}/model_{$library_name_L}.php", $model_def);
 		// Views
 		$view_struct_def = $this->load->view( "Templates/Views/general_structure.php", array (), true );
+		mkdir("{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/", 0755, true);
+		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/general_structure.php", $view_struct_def);
 		$table_struct_def = $this->load->view( "Templates/Views/table_structure.php", array (), true );
+		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/table_structure.php", $table_struct_def);
+		$table_edit_structure_def = $this->load->view( "Templates/Views/edit_structure.php", array (), true );
+		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/edit_structure.php", $table_edit_structure_def);		
 		// Views_assembler
 		$views_assembler_def = $this->load->view( "Templates/Views_assembler/default.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L,
 		), true );
-		// Save generated templates....
+		mkdir("{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/Views_assembler/{$library_name_U}/", 0755, true);
+		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/Views_assembler/{$library_name_U}/Main_{$library_name_L}_views.php", $views_assembler_def);
 	}
 	/**
 	 * Check if, inside the relative "configuratios file", we already have this table

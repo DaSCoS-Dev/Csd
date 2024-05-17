@@ -3,32 +3,30 @@ if (! defined( "BASEPATH" )) {
 	exit( "No direct script access allowed" );
 }
 $class_code = <<<EOF
-
 <?php
 if (! defined ( 'BASEPATH' )) {
 	exit ( 'No direct script access allowed' );
 }
 class ajax_{$library_name_L} extends CI_Controller {
 
+	protected \$table_headers, \$ordered_table_headers, \$primaryIndex;
+	
 	public function __construct() {
 		parent::__construct ();
 		// Carico il model
 		\$this->load->model ( "{$library_name_U}/model_{$library_name_L}" );
-		\$this->corrispondenza_nomi_colonne = array (
-				0 => "descrizione",
-				1 => "calcolo",
-				2 => "cancellato",
-				3 => "null"
-		);
+		\$this->table_headers = \$this->model_{$library_name_L}->table_structure;
+		\$this->ordered_table_headers = \$this->super_lib->do_exec( "chooseTableHeaderOrder", \$this->model_{$library_name_L}->get_table_header());
+		\$this->primaryIndex = \$this->model_articoli->getPrimaryIndex();
 	}
 
 	public function get_{$library_name_L}_tabella(\$filtro = null) {
 		if (! is_ajax ()) {
-			\$this->session->set_userdata ( "ko_msg", "Chiamata non valida. Risulti non loggato o hai provato ad accedere in modo non corretto a una funzione del Sistema!" );
+			\$this->session->set_userdata ( "ko_msg", "Invalid call. You are not logged in or you have tried to access a system function incorrectly!" );
 			redirect ( "/" );
 		}
 		\$post_dati = \$_POST;
-		\$sorting = \$this->corrispondenza_nomi_colonne [ \$post_dati [ "order" ] [ 0 ] [ "column" ] ];
+		\$sorting = \$this->ordered_table_headers [ \$post_dati [ "order" ] [ 0 ] [ "column" ] ];
 		\$sorting_dir = \$post_dati [ "order" ] [ 0 ] [ "dir" ];
 		if (trim( \$sorting ) != "") {
 			\$this->model_{$library_name_L}->set_order_by( "`{\$sorting}` {\$sorting_dir}" );
@@ -48,35 +46,61 @@ class ajax_{$library_name_L} extends CI_Controller {
 		} else {
 			\$result->iTotalDisplayRecords = \$post_dati["length"];
 		}
-		foreach ( \$records as \$idx => \$riga ) {
+		foreach ( \$records as \$idx => \$row ) {
 			if (is_int ( \$idx / 2 )) {
 				\$style_row = "table.dataTable tr.odd";
 			} else {
 				\$style_row = "table.dataTable tr.even";
 			}
-			\$class_row = "";
-			\$result->aaData [] = array (
+			\$result->aaData [\$idx ] = array (
 					"DT_RowAttr" => array (
 							"style" => \$style_row 
-					),
-					"DT_RowClass" => \$class_row,
-					"DT_RowId" => "row_{$library_name_L}_{\$riga->id}",
-					"DT_RowClick" => "xajax_execute('{$library_name_U}/Main_{$library_name_U}', 'index', 'edit', {\$riga->id})",
-					0 => "{\$riga->descrizione}",
-					1 => "{\$riga->calcolo}",
-					2 => "{\$abilitata}",
-					3 => "<div id=\"action_buttons\" style=\"cursor: pointer; margin-top: 0px; margin-left: 0px\">
-								<span class=\"fs-4 mb-3\" id=\"image_edit\" title=\"Edit\" alt=\"Edit\" style=\"cursor: pointer\" onclick=\"xajax_execute('{$library_name_U}/Main_{$library_name_U}', 'index', 'edit', {\$riga->id});\">{\$this->view_assembler->modifica_documento()}</span>
-								<span class=\"fs-4 mb-3\" id=\"image_delete\" alt=\"Delete\" title=\"Delete\" onclick=\"xajax_execute('{$library_name_U}/Main_{$library_name_U}', 'index', 'delete', {\$riga->id});\">{\$this->view_assembler->elimina_documento()}</span>
-				</div>" 
+					)
 			);
+			\$this->prepareHeaders( \$result->aaData [ \$idx ], \$row );
 		}
 		\$coded = json_encode ( \$result );
 		print \$coded;
 	}
+							
+	private function prepareHeaders( &\$dataTableDefinition = array(), \$row ) {
+		foreach ( \$this->ordered_table_headers as \$index => \$columnDefinition ) {
+			\$column_name = \$columnDefinition["name"];
+			\$def = explode(",", \$columnDefinition["definition"]);
+			// n = numeric
+			// d = date in unixTimeStamp !!!
+			// t = textual
+			// f(a-z) = function for conversion. Actually NOT used
+			if (array_search("d", \$def) !== false and \$row->\$column_name !== null){
+				\$data = unix_to_human(\$row->\$column_name);
+			} else {
+				\$data = \$row->\$column_name;
+			}
+			if (\$column_name == \$this->primaryIndex->Column_name){
+				\$dataTableDefinition["DT_RowId"] = "row_{$library_name_L}_{\$row->\$column_name}";
+				\$dataTableDefinition["DT_RowClass"] = "container";
+				\$dataTableDefinition[] = "
+				<div class=\"row align-items-center\">
+					<div class=\"col-3\">
+						{\$data}
+					</div>
+					<div class=\"col-9\">
+						<div id=\"action_buttons_row_{$library_name_L}_{\$row->\$column_name}\" style=\"cursor: pointer;\">
+ 				 			<span id=\"image_edit\" title=\"Edit\" alt=\"Edit\" onclick=\"xajax_execute('{$library_name_U}/Main_{$library_name_L}', 'index', 'edit', {\$row->\$column_name});\">
+ 				 				{\$this->view_assembler->modifica_documento()}
+ 				 			</span>
+ 							<span id=\"image_delete\" alt=\"Delete\" title=\"Delete\" onclick=\"xajax_execute('{$library_name_U}/Main_{$library_name_L}', 'index', 'delete', {\$row->\$column_name});\">
+ 								{\$this->view_assembler->cancella_documento()}
+ 							</span>
+ 						</div>
+ 					</div>";
+			} else {
+				\$dataTableDefinition[] = \$data;
+			}
+		}
+	}
 }
 ?>
-
 EOF
 ;
 print $class_code;

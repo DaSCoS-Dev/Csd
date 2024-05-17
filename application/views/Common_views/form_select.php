@@ -6,6 +6,7 @@ if ( ! defined('BASEPATH')) {
 $output = <<<EOF
 
 <div id="select_container_{$id}">
+	<label for="{$name}" class="form-label">{$label}</label><br>{$alert}
 	<select id="{$name}" name="{$name}" {$action} class="{$class}">
 		{$options}
 	</select>

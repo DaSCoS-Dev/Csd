@@ -19,13 +19,13 @@ class Main_{$library_name_L} extends Super_lib {
 
 	public function __construct( ) {
 		parent::__construct( );
-		\$this->load_class("{$library_name_U}/{$library_name_U}");
 		\$this->load->model("{$library_name_U}/model_{$library_name_L}");
 		// Build dependencyes
 		\$this->build_dependency();
 		// Variables
 		\$this->model = \$this->model_{$library_name_L};
-		\$this->views = \$this->main_{$library_name_L}_views;
+		\$this->view = \$this->main_{$library_name_L}_views;
+		\$this->view->model_table_name = strtolower(\$this->model->get_table_name());
 		\$this->now = time();
 		\$this->isProd = \$this->is_live();
 	}
@@ -57,36 +57,50 @@ class Main_{$library_name_L} extends Super_lib {
 	 */
 	
 	private function listObjects( \$input = nulll ) {
-	\$head = "";
+		\$tableHeads = "";
+		\$visibility_options = array();
 		\$table_headers = \$this->model->get_table_header();
-		foreach (\$table_headers as \$header){
-			\$head .= \$this->view->build( "table_header", \$header );
+		\$this->chooseTableHeaderOrder(\$table_headers);
+		foreach (\$table_headers as \$idx => \$header){
+			\$tableHeads .= \$this->view->build( "table_header", \$header );	
+			\$this->chooseTableHeaderVisibility(\$header, \$idx, \$visibility_options);
+		}
+		if (sizeof(\$visibility_options) > 0){
+			\$visibility_options = "," . implode(",", \$visibility_options);
 		}
 		\$t_struct = new stdClass();
-		\$t_struct->tds = \$head;
+		\$t_struct->tds = \$tableHeads;
 		\$t_struct->tds_number = sizeof(\$table_headers);
 		\$full_table_structure = \$this->view->build( "table_structure", \$t_struct );
 		\$structure = \$this->view->build( "general_structure", array("table_structure" => \$full_table_structure) );
-		\$this->response->assign( "div_home_page", "innerHTML", \$structure );
+		\$this->show_html(\$structure );
 		\$this->response->assign( "sectionTitle", "innerHTML", "{$library_name_U} List" );
 		\$this->show_records_table();
 		// Trasformo in datatable....
-		\$this->response->script( "do_data_table('record_table', [[1, 'asc']], '{$library_name_L}', [{ orderable: false, targets: [1, 2] }], '', null )" );
+		\$this->response->script( "do_data_table('record_table', [[1, 'asc']], '{$library_name_L}', [{ orderable: false, targets: [0] } {\$visibility_options}], '', null )" );
 	}
 				
 	private function editObject( \$uniqueId = 0 ) {
 		if (intval( \$uniqueId ) > 0) {
 			\$key_array = array (
 					"PRIMARY" => array (
-							"id" => intval(\$uniqueId) 
+							"{\$this->model_{$library_name_L}->getPrimaryIndex()->Column_name}" => intval(\$uniqueId)
 					) 
 			);
-			\$object = \$this->model->get_record( intval( \$uniqueId ), "record_by_primary" );
+			\$object = \$this->model->get_record( \$key_array, "record_by_primary" )[0];
 		} else {
 			\$object = new {$library_name_U}();
 		}
-		\$structure = \$this->view->build( "edit_structure", \$object );
+		\$structure = \$this->view->build( "edit_structure", intval(\$uniqueId) );		
 		\$this->response->assign( "edit_record_wrapper", "innerHTML", \$structure );
+		\$fields = \$this->view->build( "groupFields", \$object);
+		foreach (\$fields as \$type => \$fieldGroup) {
+			if (\$type == "hidden"){				
+				\$this->response->append( "hiddenFields", "innerHTML", implode("\\n", \$fieldGroup) );
+			} else {
+				\$this->response->append( "nornalFields", "innerHTML", implode("\\n", \$fieldGroup) );
+			}
+		}
 		if (intval( \$uniqueId ) > 0) {
 			\$this->response->assign( "sectionTitle", "innerHTML", "Edit {$library_name_U}" );
 		} else {
@@ -96,7 +110,7 @@ class Main_{$library_name_L} extends Super_lib {
 	}
 					
 	private function saveObject( \$object = null ) {
-		\$this->parseRecord( $\object );
+		\$this->parseRecord( \$object );
 		if (\$object [ "id" ] === false) {
 			\$idDb = \$this->model->save_record( \$object );
 		} else {
@@ -111,7 +125,6 @@ class Main_{$library_name_L} extends Super_lib {
 	}
 }
 ?>
-
 EOF
 ;
 print $class_code;

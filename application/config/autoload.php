@@ -74,7 +74,8 @@ $autoload [ "helper" ] = array (
 		"url",
 		"cript",
 		"ajax",
-		"string" 
+		"string",
+		"date"
 );
 
 /*
