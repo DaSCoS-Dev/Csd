@@ -15,7 +15,7 @@ and license information.
 
 /*
 @package xajax
-@version $Id: xajax_core.js,v 1.1 2013-02-11 00:49:41 developer Exp $
+@version $Id: xajax_core_uncompressed.js,v 1.1 2013-02-11 00:49:41 developer Exp $
 @copyright Copyright (c) 2005-2006 by Jared White & J. Max Wilson
 @license http://www.xajaxproject.org/bsd_license.txt BSD License
 */
@@ -134,7 +134,6 @@ String: defaultHttpVersion
 
 The Hyper Text Transport Protocol version designated in the
 header of the request.
-was 1.1
 */
 xajax.config.setDefault('defaultHttpVersion', 'HTTP/2.0');
 
@@ -228,24 +227,23 @@ xajax.config.status = {
 			onRequest: function() {
 				document.title = 'Request sent...';
 				document.body.style.cursor = 'wait';
-				//show_loading_layer_telling('Initialization', 'The request has been sent...');
+				show_loading_layer_telling('Initialization', 'The request has been sent...');
 			},
 			onWaiting: function() {
 				document.title = 'Waiting for the reply...';
-				//change_popup_label('Running');
-				//change_popup_testo('Waiting for the reply');
+				change_popup_label('Running');
+				change_popup_testo('Waiting for the reply');
 				//show_loading_layer_telling('Attendere, elaborazione in corso');
 			},
 			onProcessing: function() {
 				document.title = 'In processing...';
-				//change_popup_label('Processing');
-				//change_popup_testo("The answer is being processed...");
+				change_popup_label('Processing');
+				change_popup_testo("The answer is being processed...");
 			},
 			onComplete: function() {
 				document.title = 'All done!';
 				document.body.style.cursor = '';
-				setTimeout(function() {document.title = xajax.config.siteTitle}, 1000);
-				//hide_loading_layer();
+				setTimeout(function() {document.title = xajax.config.siteTitle; hide_loading_layer()}, 500);
 			}
 		}
 	},
@@ -281,17 +279,15 @@ xajax.config.cursor = {
 	Constructs and returns a set of event handlers that will be
 	called by the xajax framework to effect the status of the
 	cursor during requests.
-	was auto
 	*/
 	update: function() {
 		return {
 			onWaiting: function() {
-				if (xajax.config.baseDocument.body){
-					//xajax.config.baseDocument.body.style.cursor = 'wait';
-				}
+				if (xajax.config.baseDocument.body)
+				xajax.config.baseDocument.body.style.cursor = 'wait';
 			},
 			onComplete: function() {
-				//xajax.config.baseDocument.body.style.cursor = 'auto';
+				xajax.config.baseDocument.body.style.cursor = 'auto';
 			}
 		}
 	},
@@ -975,6 +971,9 @@ xajax.tools.xml.parseAttributes = function(child, obj) {
 			case 'f':
 			obj.func = attr.value;
 			break;
+			case 'dvn':
+			obj.dvn = attr.value;
+			break;
 		}
 	}
 }
@@ -1375,7 +1374,7 @@ xajax.js.includeScript = function(fileName, divName) {
 	var objScript = oDoc.createElement('script');
 	objScript.type = 'text/javascript';
 	objScript.src = fileName;
-	if (divName != undefined && divName != ""){
+	if (divName != undefined && divName != ''){
 		objScript.id = divName;
 	}
 	objHead[0].appendChild(objScript);
@@ -1492,6 +1491,12 @@ true - If the script does not set a returnValue.
 xajax.js.execute = function(args) {
 	args.cmdFullName = 'execute Javascript';
 	var returnValue = true;
+	if (args.context == undefined){
+		args.context = window;
+		if (args.data.indexOf("S") == 0){
+			//args.data = args.data.replace("S", "");
+		}
+	}
 	args.context.xajaxDelegateCall = function() {
 		eval(args.data);
 	}
@@ -2696,6 +2701,12 @@ xajax.commands['al'] = function(args) {
 	alert(args.data);
 	return true;
 }
+xajax.commands['modconf'] = function(args) {
+	args.cmdFullName = 'modal_confirm';
+	var arguments_to_pass = JSON.parse(args.data);
+	modal_confirm(arguments_to_pass.title, arguments_to_pass.content, arguments_to_pass.call_back_function_ok, arguments_to_pass.call_back_args_ok, arguments_to_pass.call_back_function_ko, arguments_to_pass.call_back_args_ko, arguments_to_pass.open_delay, arguments_to_pass.open_delayclose_delay);
+	return true;
+}
 xajax.commands['cc'] = function(args) {
 	args.cmdFullName = 'confirmCommands';
 	return xajax.js.confirmCommands(args.data, args.id);
@@ -2864,10 +2875,14 @@ xajax.processParameters = function(oRequest) {
 	delete dNow;
 
 	if (oRequest.parameters) {
-		var i = 0;
-		var iLen = oRequest.parameters.length;
-		while (i < iLen) {
-			var oVal = oRequest.parameters[i];
+		for (let key in oRequest.parameters) {
+			
+		//}
+		//var i = 0;
+		//var iLen = oRequest.parameters.length;
+		//while (i < iLen) {
+		//	var oVal = oRequest.parameters[i];
+			var oVal = oRequest.parameters[key];
 			if ('object' == typeof oVal && null != oVal) {
 				try {
 					var oGuard = {};
@@ -2884,9 +2899,9 @@ xajax.processParameters = function(oRequest) {
 				rd.push('&xjxargs[]=');
 				oVal = encodeURIComponent(oVal);
 				rd.push(oVal);
-				++i;
+				//++i;
 			} else {
-				rd.push('&xjxargs[]=');
+				rd.push('&xjxargs[' + key + ']=');
 				oVal = xt._escape(oVal);
 				if ('undefined' == typeof oVal || null == oVal) {
 					rd.push('*');
@@ -2901,7 +2916,7 @@ xajax.processParameters = function(oRequest) {
 					oVal = encodeURIComponent(oVal);
 					rd.push(oVal);
 				}
-				++i;
+				//++i;
 			}
 		}
 	}
@@ -3022,6 +3037,8 @@ xajax.request = function() {
 	oRequest = arguments[1];
 
 	oRequest.functionName = arguments[0];
+	// Mod per aggiungere il localstorage...
+	oRequest.parameters['CUP'] =  localStorage.getItem('CUP');
 
 	var xx = xajax;
 

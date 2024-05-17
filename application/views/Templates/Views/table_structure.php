@@ -3,13 +3,12 @@ if (! defined( "BASEPATH" )) {
 	exit( "No direct script access allowed" );
 }
 $class_code = <<<EOF
-
 <?php
 if (! defined( 'BASEPATH' )) {
 	exit( 'No direct script access allowed' );
 }
 
-\$output = <<<EOF
+\$output = <<<HTML
 
 <!-- START Tabella -->
 		<table id="record_table"  class="col w-100 fs-6 hover">
@@ -34,7 +33,7 @@ if (! defined( 'BASEPATH' )) {
 			<!-- End Footer Tabella -->
 		</table>
 	<!-- END Tabella -->
-\EOF
+HTML
 
 ;
 print \$output;

@@ -9,7 +9,7 @@ if (intval($size) == 0) {
 	$l = 1;
 }
 $output = <<<EOF
-<img src="/assets/img/bootstrap-icons/{$icona}.svg" alt="{$icona}" width="{$l}" height="{$h}" class="bi {$class}">
+<i class="bi bi-{$icona} {$class}" alt="{$icona}" width="{$l}" height="{$h}"></i>
 EOF
 ;
 print $output;

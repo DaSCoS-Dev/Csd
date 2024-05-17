@@ -10,7 +10,7 @@ $output = <<<EOF
 		<center><img src="/assets/img/{$this->config->config["logo"]}" width="158" height="139" alt="Logo Tiny.top"></center>
 	</div>
 </div>
-<div class="shadow p-3 mb-5 bg-body rounded container justify-content-center align-self-center" id="div_home_page">
+<div class="shadow p-3 mb-5 bg-body rounded container-fluid justify-content-center align-self-center" id="div_home_page">
 	{$contenuto}
 </div>
 <!-- // HOME PAGE -->

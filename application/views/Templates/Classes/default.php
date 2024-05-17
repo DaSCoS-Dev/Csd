@@ -3,7 +3,6 @@ if (! defined( "BASEPATH" )) {
 	exit( "No direct script access allowed" );
 }
 $class_code = <<<EOF
-
 <?php
 if (! defined ( 'BASEPATH' )) {
 	exit ( 'No direct script access allowed' );
@@ -16,7 +15,6 @@ class {$library_name_U} extends main_object {
 	}
 }
 ?>
-
 EOF
 ;
 print $class_code;
