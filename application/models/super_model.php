@@ -22,6 +22,7 @@ if (! defined( "BASEPATH" ))
 class Super_model extends CI_Model {
 	protected $default_order_by, $table_name, $table_header, $table_info, $relationships, $primaryIndex, $hasphpMyAdminPma = null, $databaseTables;
 	public $table_structure, $index_structure;
+	private $use_phpmyadmin_features;
 
 	/**
 	 *
@@ -49,6 +50,8 @@ class Super_model extends CI_Model {
 			$this->databaseTables = $this->get_db_tables();
 		}
 		$this->build_dependency();
+		// Set the global use_phpmyadmin_features....
+		$this->use_phpmyadmin_features = $this->config->item("use_phpmyadmin_features"); 
 	}
 
 	/**
@@ -99,7 +102,7 @@ class Super_model extends CI_Model {
 	}
 
 	public function update_record( $identificativo, $tipo = "" ) {
-		return $this->o_update_record( $identificativo, $tipo );
+		return $this->do_update_record( $identificativo, $tipo );
 	}
 
 	public function delete_record( $record, $tipo = "" ) {
@@ -455,8 +458,13 @@ class Super_model extends CI_Model {
 	}
 
 	private function checkRelationshipsTable( ) {
+		// Early check....
+		if (!$this->use_phpmyadmin_features){
+			$this->hasphpMyAdminPma = false;
+			return false;
+		}
 		// Do we have the phpmyadmin table?
-		$sql = "SHOW DATABASES LIKE 'phpmyadmins'";
+		$sql = "SHOW DATABASES LIKE 'phpmyadmin'";
 		$query_resource = $this->db->query( $sql );
 		$result = $query_resource->result( "object" );
 		// Check
