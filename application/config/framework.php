@@ -24,5 +24,6 @@ $config["azienda"] = "Da.S.Co.S.";
 $config["piva"] = "IT01296270091";
 $config["logo"] = "no_image-200x100.jpg";
 $config["site_name"] = "DaSCoS_Framework";
-$config["framework_configured"] = false;
+$config["use_phpmyadmin_features"] = false;
+$config["framework_configured"] = true;
 ?>
