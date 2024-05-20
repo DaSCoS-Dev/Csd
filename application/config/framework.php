@@ -25,5 +25,5 @@ $config["piva"] = "IT01296270091";
 $config["logo"] = "no_image-200x100.jpg";
 $config["site_name"] = "DaSCoS_Framework";
 $config["use_phpmyadmin_features"] = false;
-$config["framework_configured"] = true;
+$config["framework_configured"] = false;
 ?>
