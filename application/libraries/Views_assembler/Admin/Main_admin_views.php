@@ -46,6 +46,8 @@ class Main_admin_views extends CI_View_assembler {
 			$form = $this->open_config_form($file);
 			// Build the options
 			$form .= $this->build_options($values, $form);
+			// Build the checkbox to force db creation
+			$form .= $this->buildForceDbCreation();
 			// Build the "submit"
 			$form .= $this->build_submit_form_install_framework($file, 1);
 			// Close the form
@@ -100,6 +102,11 @@ class Main_admin_views extends CI_View_assembler {
 		return $this->ci->load->view( "Admin/menu", array (), true );
 	}
 	
+	private function buildForceDbCreation(){
+		$checkbox = $this->form_field_normale( "force_db_creation", "checkbox", "1", "", "Force Db Creation", 25, "form-check-input", false, $extra = "", "" );
+		return $this->form_input_container_wrapper("force_db_creation", $checkbox, "form-check form-switch");
+	}
+	
 	private function open_config_form($file){
 		return $this->ci->load->view( "Common_views/open_form", array (
 				"form_id" => "config_form_{$file}",
@@ -114,7 +121,10 @@ class Main_admin_views extends CI_View_assembler {
 	private function build_submit_form_install_framework($file = "", $step = 1){
 		switch (intval($step)) {
 			case 1:
-				$submit = $this->form_button_submit("submit_{$file}", "Test DB Connection", "Test DB Connection", "onclick=\"xajax_execute('Admin/Main_admin', 'test_db_connection', xajax.getFormValues('config_form_{$file}', true));\"");
+				$function = " xajax_execute('Admin/Main_admin', 'test_db_connection', xajax.getFormValues('config_form_{$file}', true))  ";				
+				$confirm = "modal_confirm('Confim', 'If the Db already Exsts, it will be DESTRUCTED and recreated!<br>Are you sure?', function(){ {$function} } ) ";
+				$condition = " function() { if ( $('#force_db_creation').is(':checked') ) { {$confirm} } else { {$function} } }";
+				$submit = $this->form_button_submit("submit_{$file}", "Test DB Connection", "Test DB Connection", "onclick=\" validateFormAndExecute ('config_form_{$file}', {$condition} )\"");
 			break;
 			case 2:
 				$submit = $this->form_button_submit("submit_{$file}", "Create Administrator", "Create Administrator", "onclick=\"xajax_execute('Admin/Main_admin', 'save_user', xajax.getFormValues('config_form_{$file}', true));\"");
@@ -133,7 +143,12 @@ class Main_admin_views extends CI_View_assembler {
 				$extra = "data-bs-toggle=\"popover\" data-bs-placement=\"top\" data-bs-html=\"true\" data-bs-trigger=\"hover\"  title=\"{$config_value["Title"]}\" data-bs-content=\"{$config_value["Popover"]}\"";
 				$config_value = $config_value["value"];
 			}
-			$form .= $this->form_field_normale( $config_option, "text", $config_value, "", ucfirst($config_option), 25, "form-control", true, $extra, $alert );
+			if (stripos($config_option, "password") !== false){
+				$type = "password";
+			} else {
+				$type = "text";
+			}
+			$form .= $this->form_field_normale( $config_option, $type, $config_value, "", ucfirst($config_option), 25, "form-control", true, $extra, $alert );
 		}
 		return $form;
 	}

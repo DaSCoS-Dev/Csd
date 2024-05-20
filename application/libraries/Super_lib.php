@@ -125,6 +125,9 @@ class Super_lib {
 	protected function check_unique_user_code( ) {
 		$this->profilo_utente->Codice = random_string( 'allnum', 12 );
 		// Cerco che non esista già come utente o come "short"
+		if (!$this->config->item("framework_configured")){
+			return $this->profilo_utente->Codice;
+		}
 		$esiste = $this->Super_model->get_unique_user_code( $this->profilo_utente->Codice );
 		if (isset( $esiste->ID )) {
 			// unset($this->profilo_utente->Codice);
@@ -192,13 +195,14 @@ class Super_lib {
 		$args = func_get_args() [ 0 ];
 		// Local storage
 		$pu = $args [ "CUP" ];
-		if (! sizeof( $pu ) and ! isset( $this->profilo_utente->ID )) {
+		if (is_null($pu) and ! isset( $this->profilo_utente->ID )) {
 			// Non mi arriva un profilo utente, quindi per ora lo considero NUOVO utente anonimo
 			$this->profilo_utente = new stdClass();
 			$this->check_unique_user_code();
 			$this->profilo_utente->ID = 0;
+			$this->profilo_utente->navigation = new stdClass();
 			$pu = $this->profilo_utente;
-		} elseif (sizeof( $pu ) and ! isset( $this->profilo_utente )) {
+		} elseif (trim( $pu ) != "" and ! isset( $this->profilo_utente )) {
 			$this->profilo_utente = json_decode( decript_high_security( $args [ "CUP" ] ) );
 			if ($this->session->session_updated == true) {
 				$this->profilo_utente->session_id = $this->session->userdata [ "session_id" ];
@@ -381,7 +385,7 @@ class Super_lib {
 	}
 
 	final protected function error( $text = "", $title = "", $time_out = 5000 ) {
-		return $this->response->script( "show_layer = true; alert('{$text}', '{$title}', {$time_out});" );
+		return $this->response->script( "show_layer = true; setTimeout(function() { alert('{$text}', '{$title}', {$time_out}) }, 750);" );
 	}
 
 	final protected function message( $text = "", $title = "Info", $timeout = 5000 ) {

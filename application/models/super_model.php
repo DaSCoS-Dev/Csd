@@ -29,6 +29,8 @@ class Super_model extends CI_Model {
 	 * @param array/objects $params        	
 	 */
 	public function __construct( $params = null ) {
+		global $CFG;
+		$framework_configured = $CFG->item("framework_configured");
 		// Se arrivano dei parametri (array)...
 		if ($params != null) {
 			foreach ( $params as $var => $value ) {
@@ -40,13 +42,13 @@ class Super_model extends CI_Model {
 			$class_name = strtolower( get_class( $this ) );
 			$this->super_lib->$class_name = $this;
 		}
-		if (get_class( $this ) !== "Super_model") {
+		if (get_class( $this ) !== "Super_model" and $framework_configured) {
 			$this->get_indexes();
 			$this->get_structure( $this->table_name );
 			$this->build_default_order_by();
 			$this->relationships = $this->get_relationships();
 			$this->primaryIndex = $this->get_table_indexes( "PRIMARY" ) [ 0 ];
-		} else {
+		} elseif ($framework_configured) {
 			$this->databaseTables = $this->get_db_tables();
 		}
 		$this->build_dependency();
@@ -94,6 +96,12 @@ class Super_model extends CI_Model {
 	}
 
 	public function get_record( $identificativo, $tipo = "", $start = 0, $limit = 999999, $extra_params = null ) {
+		if (is_null($start)){
+			$start = 0;
+		}
+		if (is_null($limit)){
+			$limit = 999999;
+		}
 		return $this->do_get_record( $identificativo, $tipo, $start, $limit, $extra_params );
 	}
 
@@ -111,6 +119,10 @@ class Super_model extends CI_Model {
 
 	public function symple_query( $sql ) {
 		return $this->do_symple_query( $sql );
+	}
+	
+	public function multi_query($sql){
+		return $this->do_multi_query($sql);
 	}
 
 	public function get_unique_user_code( $codice = "" ) {
@@ -272,7 +284,7 @@ class Super_model extends CI_Model {
 	 *
 	 * @param string $string        	
 	 */
-	final protected function set_order_by( $string = "ID" ) {
+	final public function set_order_by( $string = "ID" ) {
 		$this->default_order_by = $string;
 	}
 
@@ -428,6 +440,9 @@ class Super_model extends CI_Model {
 	
 	private function findRelationsByStructure( ) {
 		$structure = array();
+		if (!is_array($this->databaseTables)){
+			return $structure;
+		}
 		foreach ( $this->table_structure as $field ) {
 			// Search if the Field is like "id_table"
 			$masterField = $field->Field;
@@ -500,6 +515,17 @@ class Super_model extends CI_Model {
 	 */
 	private function do_symple_query( $sql ) {
 		return $this->db->query( $sql );
+	}
+	
+	private function do_multi_query($sql){
+		$this->db->multi_query( $sql );
+		do {
+			if ($result = $this->db->conn_id->store_result()) {
+				$result_set = $result->fetch_all(MYSQLI_ASSOC);
+				$result->free();
+			}
+		} while ($this->db->conn_id->next_result());
+		return $result_set;
 	}
 
 	/**

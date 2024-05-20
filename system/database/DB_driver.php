@@ -233,6 +233,16 @@ class CI_DB_driver {
 
 	// --------------------------------------------------------------------
 
+	function multi_query($sql){
+		// ASSUME IT IS VALID, no check by now....
+		if ( ! $this->conn_id)
+		{
+			$this->initialize();
+		}
+		
+		return $this->_executeMulti_query($sql);
+	}
+	
 	/**
 	 * Execute the query
 	 *

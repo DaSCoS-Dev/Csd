@@ -1,4 +1,11 @@
 var myModal = new bootstrap.Modal(document.getElementById('div_popup'));
+var xajaxDialog = $( "#xajax_dialog" ).dialog({
+    autoOpen: false,
+    hide: {
+        effect: "clip",
+        duration: 500
+      }
+});
 autoCloseLayer = true;
 show_layer = true;
 
@@ -11,6 +18,7 @@ function change_popup_testo(testo) {
 }
 
 function show_loading_layer() {
+	$('#modal_ok_button').off("click");
 	myModal.show();
 }
 
@@ -32,6 +40,24 @@ function show_loading_layer_telling(title, text) {
 	}
 }
 
+function xajax_dialog(title, text){
+	xajaxDialog.dialog( "option", "title", title );
+	$("#xajax_text").html(text);
+	xajaxDialog.dialog( "open" );
+}
+
+function change_xajax_label(text){
+	xajaxDialog.dialog( "option", "title", text );
+}
+
+function change_xajax_text(text){
+	$("#xajax_text").html(text);
+}
+
+function close_xajax_dialog(){
+	xajaxDialog.dialog( "close" );
+}
+
 function popup(title, content, open_delay, close_delay) {
 	show_layer = true;
 	if (parseInt(open_delay) > 0) {
@@ -41,7 +67,7 @@ function popup(title, content, open_delay, close_delay) {
 			show_loading_layer();
 		}, open_delay);
 	} else {
-		return popup(title, content, 10, close_delay);
+		return popup(title, content, 100, close_delay);
 	}
 	if (parseInt(close_delay) > 0) {
 		setTimeout(function() {
@@ -119,7 +145,7 @@ function modal_confirm(title, message, call_back_function_ok) {
 	var content = '<div id="modal_text" class="alert alert-primary d-flex align-items-center" role="alert">'
 			+ '<div> ' + message + '</div>' + '</div>';
 	change_popup_label(title);
-	change_popup_testo(content);
-	$("#modal_ok_button").click(	call_back_function_ok );
+	change_popup_testo(content);	
 	show_loading_layer();
+	$("#modal_ok_button").click(	call_back_function_ok );
 }

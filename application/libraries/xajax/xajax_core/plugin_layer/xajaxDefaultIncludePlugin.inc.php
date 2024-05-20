@@ -6,14 +6,12 @@
  * Please see <copyright.inc.php> for a detailed description, copyright
  * and license information.
  */
-
 /*
  * @package xajax
  * @version $Id: xajaxDefaultIncludePlugin.inc.php,v 1.1 2013-02-11 00:49:46 developer Exp $
  * @copyright Copyright (c) 2005-2006 by Jared White & J. Max Wilson
  * @license http://www.xajaxproject.org/bsd_license.txt BSD License
  */
-
 /*
  * Class: xajaxIncludeClientScript
  * Generates the SCRIPT tags necessary to 'include' the xajax javascript
@@ -37,7 +35,7 @@ class xajaxIncludeClientScriptPlugin extends xajaxRequestPlugin {
 	var $bDeferScriptGeneration;
 	var $sLanguage;
 
-	function xajaxIncludeClientScriptPlugin( ) {
+	function __construct( ) {
 		$this->sJsURI = '';
 		$this->aJsFiles = array ();
 		$this->sDefer = '';
@@ -264,41 +262,31 @@ class xajaxIncludeClientScriptPlugin extends xajaxRequestPlugin {
 	function printJavascriptInclude( $asHtml ) {
 		$aJsFiles = $this->aJsFiles;
 		$sJsURI = $this->sJsURI;
-		
-		if (0 == count( $aJsFiles ) or ! is_array( $aJsFiles )) {
+		if (! is_array( $aJsFiles ) or 0 == sizeof( $aJsFiles )) {
 			$aJsFiles = array ();
 			$rnd = "";
 			$aJsFiles [ ] = array (
 					$this->_getScriptFilename( "xajax_js/xajax_core.min.js{$rnd}" ),
 					'xajax' 
 			);
-			/*$aJsFiles [ ] = array (
-					$this->_getScriptFilename( "xajax_js/xajax_extend.min.js{$rnd}" ),
-					'xajax' 
-			);*/
-			
 			if (true === $this->bDebug)
 				$aJsFiles [ ] = array (
 						$this->_getScriptFilename( 'xajax_js/xajax_debug_uncompressed.js' ),
 						'xajax.debug' 
 				);
-			
 			if (true === $this->bVerboseDebug)
 				$aJsFiles [ ] = array (
 						$this->_getScriptFilename( 'xajax_js/xajax_verbose_uncompressed.js' ),
 						'xajax.debug.verbose' 
 				);
-			
 			if (null !== $this->sLanguage)
 				$aJsFiles [ ] = array (
 						$this->_getScriptFilename( 'xajax_js/xajax_lang_' . $this->sLanguage . '_uncompressed.js' ),
 						'xajax' 
 				);
 		}
-		
 		if ($sJsURI != '' && substr( $sJsURI, - 1 ) != '/')
 			$sJsURI .= '/';
-		
 		$sCrLf = "\n";
 		$html = "";
 		foreach ( $aJsFiles as $aJsFile ) {
@@ -321,7 +309,6 @@ EOF
 				print $sCrLf;
 			}
 		}
-		
 		if (0 < $this->nScriptLoadTimeout) {
 			foreach ( $aJsFiles as $aJsFile ) {
 				if ($asHtml) {
@@ -408,7 +395,6 @@ EOF
 		return $sFilename;
 	}
 }
-
 /*
  * Register the xajaxIncludeClientScriptPlugin object with the xajaxPluginManager.
  */

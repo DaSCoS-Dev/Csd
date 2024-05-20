@@ -13,7 +13,7 @@ if (! defined( "BASEPATH" )) {
 class Model_admin extends Super_model {
 
 	public function __construct( $params = null ) {
-		$this->table_name = "Noleggi";
+		$this->table_name = "csd_users";
 		parent::__construct( $params );
 	}
 

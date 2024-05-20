@@ -312,7 +312,7 @@ function redraw_data_table(id_tabella) {
 	}
 }
 
-function do_data_table(id_tabella, sorting, section, data_type, filter, total) {
+function do_data_table(id_tabella, sorting, section, data_type, total) {
 	if (sorting == undefined) {
 		sort_order = [
 			[1, "desc"]
@@ -355,7 +355,7 @@ function do_data_table(id_tabella, sorting, section, data_type, filter, total) {
 		sServerMethod: "POST",
 		ajax: {
 			url: "/ajax/" + ucfirst(my_ajax_section) + "/ajax_" + my_ajax_section + "/get_" + my_function +
-				"_tabella" + "/" + filter,
+				"_tabella",
 			dataType: 'json',
 			type: "POST",
 			data: function(d) {
@@ -368,4 +368,18 @@ function do_data_table(id_tabella, sorting, section, data_type, filter, total) {
 			},
 		},
 	});
+}
+
+function validateFormAndExecute(formId, functionToExecute) {
+    // Seleziona il form tramite l'id
+    var form = document.getElementById( formId );
+    
+    // Verifica se il form è valido
+    if (form.checkValidity()) {
+        // Se il form è valido, chiama la funzione xajax_execute
+    	functionToExecute();
+    } else {
+        // Se il form non è valido, mostra i messaggi di errore del browser
+        form.reportValidity();
+    }
 }

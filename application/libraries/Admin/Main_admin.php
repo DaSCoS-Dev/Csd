@@ -43,7 +43,7 @@ class Main_admin extends Super_lib {
 
 	/**
 	 * The Admin choose to change something about the main configuration of Framework
-	 * 
+	 *
 	 * @return xajaxResponse
 	 */
 	protected function configure( ) {
@@ -65,7 +65,7 @@ class Main_admin extends Super_lib {
 	 * and opening for the first time the relative web page in the browser.
 	 * $step equals 1 for default (db config), become 2 or more for the next step
 	 * Default 2ns step equals creation of Admin user
-	 * 
+	 *
 	 * @param number $step        	
 	 */
 	protected function install( $step = 1 ) {
@@ -105,6 +105,7 @@ class Main_admin extends Super_lib {
 				"ban_reason" => "",
 				"code" => $this->profilo_utente->Codice 
 		);
+		$this->users->profilo_utente = $this->profilo_utente;
 		$this->users->create_user( $data, true );
 		// Change the configuration about the "status" of the framework
 		$conf_file = file_get_contents( "{$_SERVER['DOCUMENT_ROOT']}/application/config/framework.php" );
@@ -120,47 +121,35 @@ class Main_admin extends Super_lib {
 	 * Used to test the Db connection with submitted parameters.
 	 * If successfully let's change the configuration file and show a popup for the next step (install -> step 2)
 	 * On failure a popup warning will be displayed
-	 * 
+	 *
 	 * @param array $form_input        	
 	 * @return boolean
 	 */
 	protected function test_db_connection( $form_input ) {
 		$this->ci->config->load( "database", true );
 		$this->load_install_options();
-		// Check the basilar form input
-		$base_check = $this->check_base_input( $form_input, "install" );
-		if ($base_check === false) {
+		if (! $this->check_base_input( $form_input, "install" )) {
 			return false;
 		}
-		// Let's check if I can connect to database
-		$conn = new mysqli( xss_clean( $form_input [ "hostname" ] ), xss_clean( $form_input [ "username" ] ), xss_clean( $form_input [ "password" ] ), xss_clean( $form_input [ "database" ] ) );
-		// Check connection
-		if ($conn->connect_error) {
-			$conn_err = escape_single_quote( $conn->connect_error );
-			$this->error( "Cannot connect to Database Server. Please check the form.<br>The Database Server tells: <strong>{$conn_err}</strong>", "Error", "5000" );
-			$conn->close();
+		mysqli_report( MYSQLI_REPORT_ERROR );
+		$conn = $this->create_connection( $form_input );
+		if (! $this->validate_connection($conn, $form_input)) {
+			if (!isset($form_input["force_db_creation"])) {
+				return false;
+			}
+			$conn = $this->create_connection($form_input, false);
+			if (! $this->validate_forced_connection($conn, $form_input)) {
+				return false;
+			}
+		}
+		if (! $this->validate_db_authorizations( $conn, $form_input )) {
 			return false;
 		}
-		// Check real permission on database
-		$conn->query( "CREATE TABLE `{$form_input["database"]}`.`test` ( `field` INT NOT NULL ) ENGINE = MyISAM;" );
-		if ($conn->error !== "") {
-			$conn_err = escape_single_quote( $conn->error );
-			$this->error( "Database Error. Please check the form.<br>The Database Server tells: <strong>{$conn_err}</strong>", "Error", "5000" );
-			$conn->close();
+		if (! $this->update_config_and_initialize_db( $conn, $form_input )) {
 			return false;
-		} else {
-			// Fine, we can connect to the db, so drop the temp table :-D
-			$conn->query( "DROP TABLE `{$form_input["database"]}`.`test`" );
 		}
-		$conn->close();
-		// Everithing ok. Create the Db, save the framework_configured option, ask for admin user
-		$change_config = $this->change_config( $form_input, "install", false );
-		if (! $change_config) {
-			return false;
-		} else {
-			$this->create_database_tables();
-			$this->confirm_action( "Database connected", "The Db is configured.<br>Let go ahead and configure the Administrator!", "function() { xajax_execute('Admin/Main_admin', 'install', 2) }" );
-		}
+		$this->confirm_action( "Database connected", "The Db is configured.<br>Let go ahead and configure the Administrator!", "function() { xajax_execute('Admin/Main_admin', 'install', 2) }" );
+		return true;
 	}
 
 	/**
@@ -234,7 +223,7 @@ class Main_admin extends Super_lib {
 
 	/**
 	 * Let create a new set for accessing and manipulating the new functionality
-	 * 
+	 *
 	 * @param array $input        	
 	 */
 	protected function create_new_functionality( $input, $force = false ) {
@@ -253,70 +242,70 @@ class Main_admin extends Super_lib {
 		$just_done = $this->check_for_functionality( $stream, $input [ "functionality_table" ] );
 		if (! $just_done or $force) {
 			// Take the templates and create the structure!!
-			$this->buildFunctionalityStructure($input [ "functionality_table" ]);
+			$this->buildFunctionalityStructure( $input [ "functionality_table" ] );
 		} else {
 			$this->error( "The chosen table has already been used to create the basic structures therefore it is not possible to reuse it", "Error", 4000 );
 			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'create_new_functionality_form') } , 4100 ) " );
 			return false;
 		}
-		$this->message("Functionality has been built right now!", "Success");
+		$this->message( "Functionality has been built right now!", "Success" );
 	}
 
 	/**
 	 * PRIVATE FUNCTIONS
 	 */
-	
-	private function buildFunctionalityStructure($table_name){
-		$library_name_U = ucfirst(strtolower($table_name));
-		$library_name_L = strtolower($library_name_U);
+	private function buildFunctionalityStructure( $table_name ) {
+		$library_name_U = ucfirst( strtolower( $table_name ) );
+		$library_name_L = strtolower( $library_name_U );
 		// AjaxRequests
 		$ajax_def = $this->load->view( "Templates/AjaxRequests/default.php", array (
 				"library_name_U" => $library_name_U,
-				"library_name_L" => $library_name_L,
+				"library_name_L" => $library_name_L 
 		), true );
-		mkdir("{$_SERVER["DOCUMENT_ROOT"]}/application/controllers/ajax_requests/{$library_name_U}/", 0755, true);
-		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/controllers/ajax_requests/{$library_name_U}/ajax_{$library_name_L}.php", $ajax_def);
+		mkdir( "{$_SERVER["DOCUMENT_ROOT"]}/application/controllers/ajax_requests/{$library_name_U}/", 0755, true );
+		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/controllers/ajax_requests/{$library_name_U}/ajax_{$library_name_L}.php", $ajax_def );
 		// Classes
 		$class_def = $this->load->view( "Templates/Classes/default.php", array (
 				"library_name_U" => $library_name_U,
-				"library_name_L" => $library_name_L,
+				"library_name_L" => $library_name_L 
 		), true );
-		mkdir("{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/", 0755, true);
-		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/{$library_name_L}.php", $class_def);
+		mkdir( "{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/", 0755, true );
+		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/{$library_name_L}.php", $class_def );
 		// Libraries
 		$lib_def = $this->load->view( "Templates/Libraries/default.php", array (
 				"library_name_U" => $library_name_U,
-				"library_name_L" => $library_name_L,
+				"library_name_L" => $library_name_L 
 		), true );
-		mkdir("{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/{$library_name_U}/", 0755, true);
-		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/{$library_name_U}/Main_{$library_name_L}.php", $lib_def);
+		mkdir( "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/{$library_name_U}/", 0755, true );
+		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/{$library_name_U}/Main_{$library_name_L}.php", $lib_def );
 		// Models
 		$model_def = $this->load->view( "Templates/Models/default.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L,
-				"table_name" => $table_name,
+				"table_name" => $table_name 
 		), true );
-		mkdir("{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$library_name_U}/", 0755, true);
-		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$library_name_U}/model_{$library_name_L}.php", $model_def);
+		mkdir( "{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$library_name_U}/", 0755, true );
+		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$library_name_U}/model_{$library_name_L}.php", $model_def );
 		// Views
 		$view_struct_def = $this->load->view( "Templates/Views/general_structure.php", array (), true );
-		mkdir("{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/", 0755, true);
-		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/general_structure.php", $view_struct_def);
+		mkdir( "{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/", 0755, true );
+		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/general_structure.php", $view_struct_def );
 		$table_struct_def = $this->load->view( "Templates/Views/table_structure.php", array (), true );
-		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/table_structure.php", $table_struct_def);
+		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/table_structure.php", $table_struct_def );
 		$table_edit_structure_def = $this->load->view( "Templates/Views/edit_structure.php", array (), true );
-		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/edit_structure.php", $table_edit_structure_def);		
+		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/edit_structure.php", $table_edit_structure_def );
 		// Views_assembler
 		$views_assembler_def = $this->load->view( "Templates/Views_assembler/default.php", array (
 				"library_name_U" => $library_name_U,
-				"library_name_L" => $library_name_L,
+				"library_name_L" => $library_name_L 
 		), true );
-		mkdir("{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/Views_assembler/{$library_name_U}/", 0755, true);
-		file_put_contents("{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/Views_assembler/{$library_name_U}/Main_{$library_name_L}_views.php", $views_assembler_def);
+		mkdir( "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/Views_assembler/{$library_name_U}/", 0755, true );
+		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/Views_assembler/{$library_name_U}/Main_{$library_name_L}_views.php", $views_assembler_def );
 	}
+
 	/**
 	 * Check if, inside the relative "configuratios file", we already have this table
-	 * 
+	 *
 	 * @param unknown $table        	
 	 */
 	private function check_for_functionality( $config_file_content, $table ) {
@@ -333,14 +322,109 @@ class Main_admin extends Super_lib {
 		}
 	}
 
-	private function create_database_tables( ) {
+	/**
+	 * Db functions
+	 */
+	private function create_connection( $form_input, $withDatabase = true ) {
+		$hostname = xss_clean( $form_input [ "hostname" ] );
+		$username = xss_clean( $form_input [ "username" ] );
+		$password = xss_clean( $form_input [ "password" ] );
+		$database = $withDatabase ? xss_clean( $form_input [ "database" ] ) : null;
+		return @new mysqli( $hostname, $username, $password, $database );
+	}
+
+	private function validate_connection( $conn, $form_input ) {
+		if ($conn->connect_error) {
+			if (! $form_input [ "force_db_creation" ]) {
+				$this->display_db_error( $conn->connect_error );
+			}
+			return false;
+		}
+		return true;
+	}
+
+	private function validate_forced_connection( $conn, $form_input ) {
+		if (! $this->validate_connection( $conn, $form_input )) {
+			return false;
+		}
+		return true;
+	}
+
+	private function validate_db_authorizations( $conn, $form_input ) {
+		if (! $this->validate_db_existence( $conn, $form_input )) {
+			return false;
+		}
+		if (! $this->validate_db_creation( $conn, $form_input )) {
+			return false;
+		}
+		if (! $this->validate_db_permissions( $conn, $form_input )) {
+			return false;
+		}
+		return true;
+	}
+
+	private function validate_db_existence( $conn, $form_input ) {
+		$database = xss_clean( $form_input [ "database" ] );
+		$sql = "SHOW DATABASES LIKE '{$database}'";
+		$conn->query( $sql );
+		if ($conn->error !== "") {
+			return $this->got_db_error($conn);
+		}
+		return true;
+	}
+
+	private function validate_db_creation( $conn, $form_input ) {
+		$database = xss_clean( $form_input [ "database" ] );
+		$sql = "CREATE DATABASE `test_{$database}_validation` DEFAULT CHARACTER SET utf8mb4;";
+		$conn->query( $sql );
+		if ($conn->error !== "") {
+			return $this->got_db_error($conn);
+		} else {			
+			return true;
+		}
+	}
+
+	private function validate_db_permissions( $conn, $form_input ) {
+		$database = xss_clean( $form_input [ "database" ] );
+		$sql = "CREATE TABLE `test_{$database}_validation`.`test` ( `field` INT NOT NULL ) ENGINE = MyISAM;";
+		$conn->query( $sql );
+		if ($conn->error !== "") {
+			return $this->got_db_error($conn);
+		} else {
+			$conn->query( "DROP DATABASE `test_{$database}_validation`" );
+			return true;
+		}
+	}
+
+	private function got_db_error($conn){
+		$this->display_db_error( $conn->error );
+		$conn->close();
+		return false;
+	}
+	
+	private function display_db_error( $error ) {
+		$conn_err = escape_single_quote( $error );
+		$this->error( "Database Error. Please check the form.<br>The Database Server tells: <strong>{$conn_err}</strong>", "Error", "5000" );
+	}
+
+	private function update_config_and_initialize_db( $conn, $form_input ) {
+		if (! $this->change_config( $form_input, "install", false )) {
+			$conn->close();
+			return false;
+		} else {
+			$this->Super_model->db->conn_id = $conn;
+			$this->create_database_tables( xss_clean( $form_input [ "database" ] ) );
+			return true;
+		}
+	}
+
+	private function create_database_tables( $dbname = "" ) {
 		// Open the db tables definition
-		// $db_def = file_get_contents( "{$_SERVER['DOCUMENT_ROOT']}/views/Templates/db_structure.php");
 		$db_def = $this->load->view( "Templates/db_structure.php", array (
 				"dbname" => $dbname 
 		), true );
 		// Let's execute queryes
-		$this->Super_model->symple_query( $db_def );
+		$this->Super_model->multi_query( $db_def );
 	}
 
 	private function do_config_replacements( &$stream, $good_options, $form_input ) {
