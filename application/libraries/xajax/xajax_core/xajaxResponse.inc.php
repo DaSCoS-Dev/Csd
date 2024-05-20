@@ -6,14 +6,12 @@
  * Please see <copyright.inc.php> for a detailed description, copyright
  * and license information.
  */
-
 /*
  * @package xajax
  * @version $Id: xajaxResponse.inc.php,v 1.1 2013-02-11 00:49:25 developer Exp $
  * @copyright Copyright (c) 2005-2006 by Jared White & J. Max Wilson
  * @license http://www.xajaxproject.org/bsd_license.txt BSD License
  */
-
 /*
  * Class: xajaxResponse
  * Collect commands to be sent back to the browser in response to a xajax
@@ -33,37 +31,32 @@
 class xajaxResponse {
 	/**
 	 * #@+
-	 * 
+	 *
 	 * @access protected
 	 */
-	
 	/*
 	 * Array: aCommands
 	 * Stores the commands that will be sent to the browser in the response.
 	 */
 	var $aCommands;
-	
 	/*
 	 * String: sCharacterEncoding
 	 * The name of the encoding method you wish to use when dealing with
 	 * special characters. See <xajax->setEncoding> for more information.
 	 */
 	var $sCharacterEncoding;
-	
 	/*
 	 * Boolean: bOutputEntities
 	 * Convert special characters to the HTML equivellent. See also
 	 * <xajax->bOutputEntities> and <xajax->setFlag>.
 	 */
 	var $bOutputEntities;
-	
 	/*
 	 * Mixed: returnValue
 	 * A string, array or integer value to be returned to the caller when
 	 * using 'synchronous' mode requests. See <xajax->setMode> for details.
 	 */
 	var $returnValue;
-	
 	/*
 	 * Object: objPluginManager
 	 * A reference to the global plugin manager.
@@ -73,26 +66,21 @@ class xajaxResponse {
 	/**
 	 * #@-
 	 */
-	
 	/*
 	 * Constructor: xajaxResponse
 	 * Create and initialize a xajaxResponse object.
 	 */
-	function xajaxResponse( ) {
+	function __construct( ) {
 		// SkipDebug
 		if (0 < func_num_args()) {
 			$objLanguageManager = & xajaxLanguageManager::getInstance();
 			trigger_error( $objLanguageManager->getText( 'XJXRSP:EDERR:01' ), E_USER_ERROR );
 		}
 		// EndSkipDebug
-		
 		$this->aCommands = array ();
-		
 		$objResponseManager = & xajaxResponseManager::getInstance();
-		
 		$this->sCharacterEncoding = $objResponseManager->getCharacterEncoding();
 		$this->bOutputEntities = $objResponseManager->getOutputEntities();
-		
 		$this->objPluginManager = & xajaxPluginManager::getInstance();
 	}
 
@@ -142,35 +130,27 @@ class xajaxResponse {
 	function &plugin( ) {
 		$aArgs = func_get_args();
 		$nArgs = func_num_args();
-		
 		// SkipDebug
-		if (false == (0 < $nArgs)) {
+		if (false == ( 0 < $nArgs )) {
 			$objLanguageManager = & xajaxLanguageManager::getInstance();
 			trigger_error( $objLanguageManager->getText( 'XJXRSP:MPERR:01' ), E_USER_ERROR );
 		}
 		// EndSkipDebug
-		
 		$sName = array_shift( $aArgs );
-		
 		$objPlugin = & $this->objPluginManager->getPlugin( $sName );
-		
 		if (false === $objPlugin) {
 			$bReturn = false;
 			return $bReturn;
 		}
-		
 		$objPlugin->setResponse( $this );
-		
 		if (0 < count( $aArgs )) {
 			$sMethod = array_shift( $aArgs );
-			
 			$aFunction = array (
 					&$objPlugin,
 					$sMethod 
 			);
 			call_user_func_array( $aFunction, $aArgs );
 		}
-		
 		return $objPlugin;
 	}
 
@@ -413,16 +393,16 @@ class xajaxResponse {
 						$newQueryPart .= ini_get( 'arg_separator.output' );
 					$newQueryPart .= rawurlencode( $key ) . '=' . rawurlencode( $value );
 				}
-			} else if ($_SERVER ['QUERY_STRING']) {
+			} else if ($_SERVER [ 'QUERY_STRING' ]) {
 				// couldn't break up the query, but there's one there
 				// possibly "http://url/page.html?query1234" type of query?
 				// just encode it and hope it works
-				$newQueryPart = rawurlencode( $_SERVER ['QUERY_STRING'] );
+				$newQueryPart = rawurlencode( $_SERVER [ 'QUERY_STRING' ] );
 			}
 			$sURL = str_replace( $queryPart, $newQueryPart, $sURL );
 		}
 		if ($iDelay)
-			$this->script( 'window.setTimeout("window.location = \'' . $sURL . '\';",' . ($iDelay * 1000) . ');' );
+			$this->script( 'window.setTimeout("window.location = \'' . $sURL . '\';",' . ( $iDelay * 1000 ) . ');' );
 		else
 			$this->script( 'window.location = "' . $sURL . '";' );
 		return $this;
@@ -460,16 +440,16 @@ class xajaxResponse {
 						$newQueryPart .= ini_get( 'arg_separator.output' );
 					$newQueryPart .= rawurlencode( $key ) . '=' . rawurlencode( $value );
 				}
-			} else if ($_SERVER ['QUERY_STRING']) {
+			} else if ($_SERVER [ 'QUERY_STRING' ]) {
 				// couldn't break up the query, but there's one there
 				// possibly "http://url/page.html?query1234" type of query?
 				// just encode it and hope it works
-				$newQueryPart = rawurlencode( $_SERVER ['QUERY_STRING'] );
+				$newQueryPart = rawurlencode( $_SERVER [ 'QUERY_STRING' ] );
 			}
 			$sURL = str_replace( $queryPart, $newQueryPart, $sURL );
 		}
 		if ($iDelay)
-			$this->script( 'window.setTimeout("window.open = \'' . $sURL . '\';",' . ($iDelay * 1000) . ');' );
+			$this->script( 'window.setTimeout("window.open = \'' . $sURL . '\';",' . ( $iDelay * 1000 ) . ');' );
 		else
 			$this->script( 'window.open = "' . $sURL . '";' );
 		return $this;
@@ -543,12 +523,11 @@ class xajaxResponse {
 	 */
 	function create( $sParent, $sTag, $sId, $sType = null ) {
 		// SkipDebug
-		if (false === (null === $sType)) {
+		if (false === ( null === $sType )) {
 			$objLanguageManager = & xajaxLanguageManager::getInstance();
 			trigger_error( $objLanguageManager->getText( 'XJXRSP:CPERR:01' ), E_USER_WARNING );
 		}
 		// EndSkipDebug
-		
 		return $this->addCommand( array (
 				'n' => 'ce',
 				't' => $sParent,
@@ -800,7 +779,7 @@ class xajaxResponse {
 	function removeScript( $sFileName, $sUnload = '' ) {
 		$this->addCommand( array (
 				'n' => 'rjs' 
-		), ('' != $sUnload) ? array (
+		), ( '' != $sUnload ) ? array (
 				$sFileName,
 				$sUnload 
 		) : $sFileName );
@@ -969,14 +948,11 @@ class xajaxResponse {
 			header( "Cache-Control: no-cache, must-revalidate" );
 			header( "Pragma: no-cache" );
 		}
-		
 		$sCharacterSet = '';
 		if ($this->sCharacterEncoding && 0 < strlen( trim( $this->sCharacterEncoding ) )) {
 			$sCharacterSet = '; charset="' . trim( $this->sCharacterEncoding ) . '"';
 		}
-		
 		$sContentType = $this->getContentType();
-		
 		header( 'content-type: ' . $sContentType . ' ' . $sCharacterSet );
 	}
 
@@ -1000,7 +976,6 @@ class xajaxResponse {
 	function loadCommands( $mCommands, $bBefore = false ) {
 		if (is_a( $mCommands, 'xajaxResponse' )) {
 			$this->returnValue = $mCommands->returnValue;
-			
 			if ($bBefore) {
 				$this->aCommands = array_merge( $mCommands->aCommands, $this->aCommands );
 			} else {
@@ -1037,7 +1012,7 @@ class xajaxResponse {
 	 * object - The <xajaxResponse> object.
 	 */
 	function addPluginCommand( $objPlugin, $aAttributes, $mData ) {
-		$aAttributes ['plg'] = $objPlugin->getName();
+		$aAttributes [ 'plg' ] = $objPlugin->getName();
 		return $this->addCommand( $aAttributes, $mData );
 	}
 
@@ -1052,26 +1027,26 @@ class xajaxResponse {
 	 * object - The <xajaxResponse> command.
 	 */
 	function addCommand( $aAttributes, $mData ) {
-		$aAttributes ['data'] = $this->_encodeArray( $mData );
-		$this->aCommands [] = $aAttributes;
+		$aAttributes [ 'data' ] = $this->_encodeArray( $mData );
+		$this->aCommands [ ] = $aAttributes;
 		return $this;
 	}
 
-	function addScript( $aAttributes, $mData ) {		
-			//	se esiste già un "data"...
+	function addScript( $aAttributes, $mData ) {
+		// se esiste già un "data"...
 		if (array_key_exists( "js", $this->aCommands )) {
-			$data = trim($this->_encodeArray( $mData ));
+			$data = trim( $this->_encodeArray( $mData ) );
 			// Verifico di avere il ; alla fine della stringa, per separare gli script
-			if (substr($data, -1) != ";"){
+			if (substr( $data, - 1 ) != ";") {
 				$data .= ";";
 			}
-			$this->aCommands ["js"]["data"] .= $data;
+			$this->aCommands [ "js" ] [ "data" ] .= $data;
 		} else {
-			$aAttributes ['data'] = $this->_encodeArray( $mData );
-			if (substr($aAttributes ['data'], -1) != ";"){
-				$aAttributes ['data'] .= ";";
+			$aAttributes [ 'data' ] = $this->_encodeArray( $mData );
+			if (substr( $aAttributes [ 'data' ], - 1 ) != ";") {
+				$aAttributes [ 'data' ] .= ";";
 			}
-			$this->aCommands ["js"] = $aAttributes;
+			$this->aCommands [ "js" ] = $aAttributes;
 		}
 		return $this;
 	}
@@ -1084,14 +1059,12 @@ class xajaxResponse {
 		print '<';
 		print '?';
 		print 'xml version="1.0"';
-		
 		$sEncoding = trim( $this->sCharacterEncoding );
 		if ($this->sCharacterEncoding && 0 < strlen( $sEncoding )) {
 			print ' encoding="';
 			print $sEncoding;
 			print '"';
 		}
-		
 		print ' ?';
 		print '>';
 	}
@@ -1103,20 +1076,15 @@ class xajaxResponse {
 	function _printResponse_XML( ) {
 		print '<';
 		print 'xjx>';
-		
 		if (null !== $this->returnValue) {
 			print '<';
 			print 'xjxrv>';
-			
 			$this->_printArray_XML( $this->returnValue );
-			
 			print '<';
 			print '/xjxrv>';
 		}
-		
 		foreach ( array_keys( $this->aCommands ) as $sKey )
-			$this->_printCommand_XML( $this->aCommands [$sKey] );
-		
+			$this->_printCommand_XML( $this->aCommands [ $sKey ] );
 		print '<';
 		print '/xjx>';
 	}
@@ -1131,28 +1099,23 @@ class xajaxResponse {
 		$pippo = $this;
 		print '<';
 		print 'cmd';
-		
 		$mData = '';
-		
 		foreach ( array_keys( $aAttributes ) as $sKey ) {
 			if ($sKey) {
 				if ('data' != $sKey) {
 					print ' ';
 					print $sKey;
 					print '="';
-					print $aAttributes [$sKey];
+					print $aAttributes [ $sKey ];
 					print '"';
 				} else {
-					$data = $aAttributes [$sKey];
+					$data = $aAttributes [ $sKey ];
 					$mData = & $data;
 				}
 			}
 		}
-		
 		print '>';
-		
 		$this->_printArray_XML( $mData );
-		
 		print '<';
 		print '/cmd>';
 	}
@@ -1168,33 +1131,28 @@ class xajaxResponse {
 	function _printArray_XML( &$mArray ) {
 		if ('object' == gettype( $mArray ))
 			$mArray = get_object_vars( $mArray );
-		
 		if (false == is_array( $mArray )) {
 			$this->_printEscapedString_XML( $mArray );
 			return;
 		}
-		
 		print '<';
 		print 'xjxobj>';
-		
 		foreach ( array_keys( $mArray ) as $sKey ) {
-			if (is_array( $mArray [$sKey] )) {
+			if (is_array( $mArray [ $sKey ] )) {
 				print '<';
 				print 'e>';
-				
-				foreach ( array_keys( $mArray [$sKey] ) as $sInnerKey ) {
+				foreach ( array_keys( $mArray [ $sKey ] ) as $sInnerKey ) {
 					// SkipDebug
 					if (htmlspecialchars( $sInnerKey, ENT_COMPAT, 'UTF-8' ) != $sInnerKey) {
 						$objLanguageManager = & xajaxLanguageManager::getInstance();
 						trigger_error( $objLanguageManager->getText( 'XJXRSP:AKERR:01' ), E_USER_ERROR );
 					}
 					// EndSkipDebug
-					
 					if ('k' == $sInnerKey || 'v' == $sInnerKey) {
 						print '<';
 						print $sInnerKey;
 						print '>';
-						$this->_printArray_XML( $mArray [$sKey] [$sInnerKey] );
+						$this->_printArray_XML( $mArray [ $sKey ] [ $sInnerKey ] );
 						print '<';
 						print '/';
 						print $sInnerKey;
@@ -1206,7 +1164,6 @@ class xajaxResponse {
 						// EndSkipDebug
 					}
 				}
-				
 				print '<';
 				print '/e>';
 			} else {
@@ -1216,7 +1173,6 @@ class xajaxResponse {
 				// EndSkipDebug
 			}
 		}
-		
 		print '<';
 		print '/xjxobj>';
 	}
@@ -1236,7 +1192,6 @@ class xajaxResponse {
 			print '*';
 			return;
 		}
-		
 		if ($this->bOutputEntities) {
 			// SkipDebug
 			if (false === function_exists( 'mb_convert_encoding' )) {
@@ -1244,7 +1199,6 @@ class xajaxResponse {
 				trigger_error( $objLanguageManager->getText( 'XJXRSP:MBEERR:01' ), E_USER_NOTICE );
 			}
 			// EndSkipDebug
-			
 			print call_user_func_array( 'mb_convert_encoding', array (
 					&$sData,
 					'HTML-ENTITIES',
@@ -1252,25 +1206,21 @@ class xajaxResponse {
 			) );
 			return;
 		}
-		
 		$nCDATA = 0;
-		
-		$bNoOpenCDATA = (false === strpos( $sData, '<' . '![CDATA[' ));
+		$bNoOpenCDATA = ( false === strpos( $sData, '<' . '![CDATA[' ) );
 		if ($bNoOpenCDATA) {
-			$bNoCloseCDATA = (false === strpos( $sData, ']]>' ));
+			$bNoCloseCDATA = ( false === strpos( $sData, ']]>' ) );
 			if ($bNoCloseCDATA) {
-				$bSpecialChars = (htmlspecialchars( $sData, ENT_COMPAT, 'UTF-8' ) != $sData);
+				$bSpecialChars = ( htmlspecialchars( $sData, ENT_COMPAT, 'UTF-8' ) != $sData );
 				if ($bSpecialChars)
 					$nCDATA = 1;
 			} else
 				$nCDATA = 2;
 		} else
 			$nCDATA = 2;
-		
 		if (0 < $nCDATA) {
 			print '<';
 			print '![CDATA[';
-			
 			// PHP defines numeric values as integer or float (double and real are aliases of float)
 			if (is_string( $sData ) and sizeof( $_FILES ) === 0) {
 				print 'S';
@@ -1279,32 +1229,30 @@ class xajaxResponse {
 			} else if (is_bool( $sData )) {
 				print 'B';
 			}
-			
 			if (1 < $nCDATA) {
 				$aSegments = explode( '<' . '![CDATA[', $sData );
 				$aOutput = array ();
 				$nOutput = 0;
 				foreach ( array_keys( $aSegments ) as $keySegment ) {
-					$aFragments = explode( ']]>', $aSegments [$keySegment] );
+					$aFragments = explode( ']]>', $aSegments [ $keySegment ] );
 					$aStack = array ();
 					$nStack = 0;
 					foreach ( array_keys( $aFragments ) as $keyFragment ) {
 						if (0 < $nStack)
-							array_push( $aStack, ']]]]><', '![CDATA[>', $aFragments [$keyFragment] );
+							array_push( $aStack, ']]]]><', '![CDATA[>', $aFragments [ $keyFragment ] );
 						else
-							$aStack [] = $aFragments [$keyFragment];
+							$aStack [ ] = $aFragments [ $keyFragment ];
 						++ $nStack;
 					}
 					if (0 < $nOutput)
 						array_push( $aOutput, '<', '![]]><', '![CDATA[CDATA[', implode( '', $aStack ) );
 					else
-						$aOutput [] = implode( '', $aStack );
+						$aOutput [ ] = implode( '', $aStack );
 					++ $nOutput;
 				}
 				print implode( '', $aOutput );
 			} else
 				print $sData;
-			
 			print ']]>';
 		} else {
 			/**
@@ -1335,16 +1283,14 @@ class xajaxResponse {
 	function _encodeArray( &$mData ) {
 		if ('object' === gettype( $mData ))
 			$mData = get_object_vars( $mData );
-		
 		if (false === is_array( $mData ))
 			return $mData;
-		
 		$aData = array ();
 		foreach ( array_keys( $mData ) as $sKey )
-			$aData [] = array (
+			$aData [ ] = array (
 					// key does not need to be encoded
 					'k' => $sKey,
-					'v' => $this->_encodeArray( $mData [$sKey] ) 
+					'v' => $this->_encodeArray( $mData [ $sKey ] ) 
 			);
 		return $aData;
 	}
@@ -1355,12 +1301,10 @@ class xajaxCustomResponse {
 	var $sCharacterEncoding;
 	var $bOutputEntities;
 
-	function xajaxCustomResponse( $sContentType ) {
+	function __construct( $sContentType ) {
 		$this->sOutput = '';
 		$this->sContentType = $sContentType;
-		
 		$objResponseManager = & xajaxResponseManager::getInstance();
-		
 		$this->sCharacterEncoding = $objResponseManager->getCharacterEncoding();
 		$this->bOutputEntities = $objResponseManager->getOutputEntities();
 	}
@@ -1387,23 +1331,19 @@ class xajaxCustomResponse {
 			$objLanguageManager = & xajaxLanguageManager::getInstance();
 			trigger_error( $objLanguageManager->getText( 'XJXRSP:MXRTERR' ), E_USER_ERROR );
 		}
-		
 		if ($objResponse->getContentType() != $this->getContentType()) {
 			$objLanguageManager = & xajaxLanguageManager::getInstance();
 			trigger_error( $objLanguageManager->getText( 'XJXRSP:MXCTERR' ), E_USER_ERROR );
 		}
-		
 		if ($objResponse->getCharacterEncoding() != $this->getCharacterEncoding()) {
 			$objLanguageManager = & xajaxLanguageManager::getInstance();
 			trigger_error( $objLanguageManager->getText( 'XJXRSP:MXCEERR' ), E_USER_ERROR );
 		}
-		
 		if ($objResponse->getOutputEntities() != $this->getOutputEntities()) {
 			$objLanguageManager = & xajaxLanguageManager::getInstance();
 			trigger_error( $objLanguageManager->getText( 'XJXRSP:MXOEERR' ), E_USER_ERROR );
 		}
 		// EndSkipDebug
-		
 		$this->sOutput .= $objResponse->getOutput();
 	}
 
@@ -1426,9 +1366,7 @@ class xajaxCustomResponse {
 	function printOutput( ) {
 		$sContentType = $this->sContentType;
 		$sCharacterSet = $this->sCharacterEncoding;
-		
 		header( "content-type: {$sContentType}; charset={$sCharacterSet}" );
-		
 		print $this->sOutput;
 	}
 }

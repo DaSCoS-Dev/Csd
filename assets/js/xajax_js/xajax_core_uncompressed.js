@@ -227,24 +227,23 @@ xajax.config.status = {
 			onRequest: function() {
 				document.title = 'Request sent...';
 				document.body.style.cursor = 'wait';
-				show_loading_layer_telling('Initialization', 'The request has been sent...');
+				xajax_dialog('Initialization', 'The request has been sent...');
 			},
 			onWaiting: function() {
 				document.title = 'Waiting for the reply...';
-				change_popup_label('Running');
-				change_popup_testo('Waiting for the reply');
-				//show_loading_layer_telling('Attendere, elaborazione in corso');
+				change_xajax_label('Running');
+				change_xajax_text('Waiting for the reply');
 			},
 			onProcessing: function() {
 				document.title = 'In processing...';
-				change_popup_label('Processing');
-				change_popup_testo("The answer is being processed...");
+				change_xajax_label('Processing');
+				change_xajax_text("The answer is being processed...");
 			},
 			onComplete: function() {
 				document.title = 'All done!';
 				document.body.style.cursor = '';
-				setTimeout(function() {document.title = xajax.config.siteTitle}, 1000);
-				hide_loading_layer();
+				setTimeout(function() {document.title = xajax.config.siteTitle}, 500);
+				close_xajax_dialog();
 			}
 		}
 	},

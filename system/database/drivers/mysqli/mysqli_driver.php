@@ -180,6 +180,11 @@ class CI_DB_mysqli_driver extends CI_DB {
 		return $result;
 	}
 
+	function _executeMulti_query ($sql){
+		$result = @mysqli_multi_query($this->conn_id, $sql);
+		return $result;
+	}
+	
 	// --------------------------------------------------------------------
 
 	/**

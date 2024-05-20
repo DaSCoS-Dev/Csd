@@ -57,7 +57,11 @@ $output = <<<EOF
   </div>
 </div>
 <!-- / Popup informativo -->
-
+<!-- Xajax dialog -->
+<div id="xajax_dialog" title="Wait">
+  <p id="xajax_text"></p>
+</div>
+<!-- / Xajax dialog -->
 <!-- Scambio dati da ajax a form -->
 <div id="magic_moment" style="display: none"></div>
 <!-- / Scambio dati da ajax a form -->

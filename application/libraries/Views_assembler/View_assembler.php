@@ -284,7 +284,7 @@ class CI_View_assembler {
 					$tableInfos = $this->ci->$modelName->get_info( $hasRelations->foreign_table );
 					$joined_table_structure = "joined_table_structure_{$hasRelations->foreign_table}";
 					// Do we have the info from the table $hasRelations->foreign_table structure?
-					if ($tableInfos == null and sizeof( $this->ci->$modelName->$joined_table_structure [ "tableInfos" ] > 0 )) {
+					if ($tableInfos == null and sizeof( $this->ci->$modelName->$joined_table_structure [ "tableInfos" ]) > 0) {
 						// Ops, we got from the table
 						$tableInfos = $this->ci->$modelName->$joined_table_structure [ "tableInfos" ];
 					}

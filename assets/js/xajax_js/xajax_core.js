@@ -222,31 +222,31 @@ xajax.config.status = {
 	Constructs and returns a set of event handlers that will be
 	called by the xajax framework to set the status bar messages.
 	*/
-	update: function() {
-		return {
-			onRequest: function() {
-				document.title = 'Request sent...';
-				document.body.style.cursor = 'wait';
-				show_loading_layer_telling('Initialization', 'The request has been sent...');
-			},
-			onWaiting: function() {
-				document.title = 'Waiting for the reply...';
-				change_popup_label('Running');
-				change_popup_testo('Waiting for the reply');
-				//show_loading_layer_telling('Attendere, elaborazione in corso');
-			},
-			onProcessing: function() {
-				document.title = 'In processing...';
-				change_popup_label('Processing');
-				change_popup_testo("The answer is being processed...");
-			},
-			onComplete: function() {
-				document.title = 'All done!';
-				document.body.style.cursor = '';
-				setTimeout(function() {document.title = xajax.config.siteTitle; hide_loading_layer()}, 500);
+		update: function() {
+			return {
+				onRequest: function() {
+					document.title = 'Request sent...';
+					document.body.style.cursor = 'wait';
+					xajax_dialog('Initialization', 'The request has been sent...');
+				},
+				onWaiting: function() {
+					document.title = 'Waiting for the reply...';
+					change_xajax_label('Running');
+					change_xajax_text('Waiting for the reply');
+				},
+				onProcessing: function() {
+					document.title = 'In processing...';
+					change_xajax_label('Processing');
+					change_xajax_text("The answer is being processed...");
+				},
+				onComplete: function() {
+					document.title = 'All done!';
+					document.body.style.cursor = '';
+					setTimeout(function() {document.title = xajax.config.siteTitle}, 500);
+					close_xajax_dialog();
+				}
 			}
-		}
-	},
+		},
 	/*
 	Function: dontUpdate
 
