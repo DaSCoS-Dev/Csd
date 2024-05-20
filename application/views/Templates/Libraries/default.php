@@ -67,6 +67,8 @@ class Main_{$library_name_L} extends Super_lib {
 		}
 		if (sizeof(\$visibility_options) > 0){
 			\$visibility_options = "," . implode(",", \$visibility_options);
+		} else {
+			\$visibility_options = "";
 		}
 		\$t_struct = new stdClass();
 		\$t_struct->tds = \$tableHeads;
@@ -77,7 +79,7 @@ class Main_{$library_name_L} extends Super_lib {
 		\$this->response->assign( "sectionTitle", "innerHTML", "{$library_name_U} List" );
 		\$this->show_records_table();
 		// Trasformo in datatable....
-		\$this->response->script( "do_data_table('record_table', [[1, 'asc']], '{$library_name_L}', [{ orderable: false, targets: [0] } {\$visibility_options}], '', null )" );
+		\$this->response->script( "do_data_table('record_table', [[1, 'asc']], '{$library_name_L}', [{ orderable: false, targets: [0] } {\$visibility_options}], null )" );
 	}
 				
 	private function editObject( \$uniqueId = 0 ) {

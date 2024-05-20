@@ -33,27 +33,13 @@ class mainXajax {
 		$this->xajaxRootDir = APPPATH . "/{$root_dir}/xajax/";
 		$this->root_dir = $GLOBALS["_SERVER"]["DOCUMENT_ROOT"] . "/" . APPPATH . $root_dir;
 		$this->xajaxJsRootDir = "/assets/js/";
-		//$this->root_dir = "{$GLOBALS["_SERVER"]["DOCUMENT_ROOT"]}/{$root_dir}";
 		// Pulizia doppi slash
 		$this->root_dir = str_replace("//", "/", $this->root_dir);
-		//$this->ci =& get_instance();
 		$this->initializeXajax();
 		$this->buildXajax();
 	}
 
 	private function initializeXajax(){
-		/*$cookie_name = $this->ci->session->sess_cookie_name;
-		if (isset($_POST["{$cookie_name}"])) {
-			session_id($_POST["{$cookie_name}"]);
-		} elseif (isset($_COOKIE["{$cookie_name}"])){
-			session_id($_COOKIE["{$cookie_name}"]);
-		} 
-		$sid = session_id();
-		if (trim($sid) == "") {
-			@session_start();
-		}
-		ini_set("display_errors", 0);
-		error_reporting(0);*/
 		$this->core = "xajax_core/";
 		if (!class_exists('xajaxRequestPlugin')){
 			require_once("{$this->xajaxRootDir}{$this->core}xajax.inc.php");
@@ -78,7 +64,11 @@ class mainXajax {
 	}
 
 	public function printJavaScript($asHtml = false){
-		$html = $this->xajax->printJavaScript("", "", $asHtml);
+		// .....
+		//$this->xajax->objPluginManager->aConfigurable[99]->configure("deferScriptGeneration", false);
+		//$this->xajax->objPluginManager->aConfigurable[99]->configure("scriptLoadTimeout", 20);
+		
+		$html = $this->xajax->printJavaScript("", [], $asHtml);
 		return $html;
 	}
 
