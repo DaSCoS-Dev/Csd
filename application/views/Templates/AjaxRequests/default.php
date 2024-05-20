@@ -17,7 +17,7 @@ class ajax_{$library_name_L} extends CI_Controller {
 		\$this->load->model ( "{$library_name_U}/model_{$library_name_L}" );
 		\$this->table_headers = \$this->model_{$library_name_L}->table_structure;
 		\$this->ordered_table_headers = \$this->super_lib->do_exec( "chooseTableHeaderOrder", \$this->model_{$library_name_L}->get_table_header());
-		\$this->primaryIndex = \$this->model_articoli->getPrimaryIndex();
+		\$this->primaryIndex = \$this->model_{$library_name_L}->getPrimaryIndex();
 	}
 
 	public function get_{$library_name_L}_tabella(\$filtro = null) {
@@ -26,7 +26,7 @@ class ajax_{$library_name_L} extends CI_Controller {
 			redirect ( "/" );
 		}
 		\$post_dati = \$_POST;
-		\$sorting = \$this->ordered_table_headers [ \$post_dati [ "order" ] [ 0 ] [ "column" ] ];
+		\$sorting = \$this->ordered_table_headers [ \$post_dati [ "order" ] [ 0 ] [ "column" ] ]["name"];
 		\$sorting_dir = \$post_dati [ "order" ] [ 0 ] [ "dir" ];
 		if (trim( \$sorting ) != "") {
 			\$this->model_{$library_name_L}->set_order_by( "`{\$sorting}` {\$sorting_dir}" );

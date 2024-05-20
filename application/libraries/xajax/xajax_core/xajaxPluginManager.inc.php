@@ -6,18 +6,15 @@
  * Please see <copyright.inc.php> for a detailed description, copyright
  * and license information.
  */
-
 /*
  * @package xajax
  * @version $Id: xajaxPluginManager.inc.php,v 1.1 2013-02-11 00:49:25 developer Exp $
  * @copyright Copyright (c) 2005-2006 by Jared White & J. Max Wilson
  * @license http://www.xajaxproject.org/bsd_license.txt BSD License
  */
-
 // SkipAIO
 require ( dirname( __FILE__ ) . '/xajaxPlugin.inc.php' );
 // EndSkipAIO
-
 /*
  * Class: xajaxPluginManager
  */
@@ -26,27 +23,22 @@ class xajaxPluginManager {
 	 * Array: aRequestPlugins
 	 */
 	var $aRequestPlugins;
-	
 	/*
 	 * Array: aResponsePlugins
 	 */
 	var $aResponsePlugins;
-	
 	/*
 	 * Array: aConfigurable
 	 */
 	var $aConfigurable;
-	
 	/*
 	 * Array: aRegistrars
 	 */
 	var $aRegistrars;
-	
 	/*
 	 * Array: aProcessors
 	 */
 	var $aProcessors;
-	
 	/*
 	 * Array: aClientScriptGenerators
 	 */
@@ -56,10 +48,9 @@ class xajaxPluginManager {
 	 * Function: xajaxPluginManager
 	 * Construct and initialize the one and only xajax plugin manager.
 	 */
-	function xajaxPluginManager( ) {
+	function __construct( ) {
 		$this->aRequestPlugins = array ();
 		$this->aResponsePlugins = array ();
-		
 		$this->aConfigurable = array ();
 		$this->aRegistrars = array ();
 		$this->aProcessors = array ();
@@ -74,7 +65,7 @@ class xajaxPluginManager {
 	 * object - a reference to the one and only instance of the
 	 * plugin manager.
 	 */
-	function &getInstance( ) {
+	static function &getInstance( ) {
 		static $obj;
 		if (! $obj) {
 			$obj = new xajaxPluginManager();
@@ -100,7 +91,6 @@ class xajaxPluginManager {
 						}
 					}
 				}
-				
 				closedir( $handle );
 			}
 		}
@@ -118,7 +108,6 @@ class xajaxPluginManager {
 	function _insertIntoArray( &$aPlugins, &$objPlugin, $nPriority ) {
 		while ( isset( $aPlugins [ $nPriority ] ) )
 			$nPriority ++;
-		
 		$aPlugins [ $nPriority ] = & $objPlugin;
 	}
 
@@ -134,10 +123,8 @@ class xajaxPluginManager {
 	function registerPlugin( &$objPlugin, $nPriority = 1000 ) {
 		if (is_a( $objPlugin, 'xajaxRequestPlugin' )) {
 			$this->_insertIntoArray( $this->aRequestPlugins, $objPlugin, $nPriority );
-			
 			if (method_exists( $objPlugin, 'register' ))
 				$this->_insertIntoArray( $this->aRegistrars, $objPlugin, $nPriority );
-			
 			if (method_exists( $objPlugin, 'canProcessRequest' ))
 				if (method_exists( $objPlugin, 'processRequest' ))
 					$this->_insertIntoArray( $this->aProcessors, $objPlugin, $nPriority );
@@ -149,10 +136,8 @@ class xajaxPluginManager {
 			trigger_error( $objLanguageManager->getText( 'XJXPM:IPLGERR:01' ) . get_class( $objPlugin ) . $objLanguageManager->getText( 'XJXPM:IPLGERR:02' ), E_USER_ERROR );
 			// EndSkipDebug
 		}
-		
 		if (method_exists( $objPlugin, 'configure' ))
 			$this->_insertIntoArray( $this->aConfigurable, $objPlugin, $nPriority );
-		
 		if (method_exists( $objPlugin, 'generateClientScript' ))
 			$this->_insertIntoArray( $this->aClientScriptGenerators, $objPlugin, $nPriority );
 	}
@@ -166,7 +151,6 @@ class xajaxPluginManager {
 	 */
 	function canProcessRequest( ) {
 		$bHandled = false;
-		
 		$aKeys = array_keys( $this->aProcessors );
 		sort( $aKeys );
 		foreach ( $aKeys as $sKey ) {
@@ -176,7 +160,6 @@ class xajaxPluginManager {
 			else if (is_string( $mResult ))
 				return $mResult;
 		}
-		
 		return $bHandled;
 	}
 
@@ -188,7 +171,6 @@ class xajaxPluginManager {
 	 */
 	function processRequest( ) {
 		$bHandled = false;
-		
 		$aKeys = array_keys( $this->aProcessors );
 		sort( $aKeys );
 		foreach ( $aKeys as $sKey ) {
@@ -198,7 +180,6 @@ class xajaxPluginManager {
 			else if (is_string( $mResult ))
 				return $mResult;
 		}
-		
 		return $bHandled;
 	}
 
@@ -275,7 +256,6 @@ class xajaxPluginManager {
 		foreach ( $aKeys as $sKey )
 			if (is_a( $this->aResponsePlugins [ $sKey ], $sName ))
 				return $this->aResponsePlugins [ $sKey ];
-		
 		$bFailure = false;
 		return $bFailure;
 	}

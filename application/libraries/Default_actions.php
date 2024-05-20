@@ -33,7 +33,7 @@ class Default_actions extends Super_lib {
 			$this->response->assign( "login_logout", "innerHTML", $bottone_ll );
 			$this->response->assign( "register_profile", "innerHTML", $bottone_re );
 			// Check db connection flag. If the option is NOT present, we are installing the framework
-			if ($this->config->config [ "framework_configured" ] === false and $_SERVER [ "REMOTE_ADDR" ] === "172.16.0.10") {
+			if ($this->config->config [ "framework_configured" ] === false) {
 				$this->response->script( "$('#register_profile').hide(); xajax_execute('Admin/Main_admin', 'install')" );
 			} elseif ($this->is_logged_in() and $this->is_admin()) {
 				$this->response->script( "$('#register_profile').hide(); xajax_execute('Admin/Main_admin', 'index')" );
