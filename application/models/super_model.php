@@ -30,7 +30,7 @@ class Super_model extends CI_Model {
 	 */
 	public function __construct( $params = null ) {
 		global $CFG;
-		$framework_configured = $CFG->item("framework_configured");
+		$framework_configured = $CFG->item( "framework_configured" );
 		// Se arrivano dei parametri (array)...
 		if ($params != null) {
 			foreach ( $params as $var => $value ) {
@@ -48,12 +48,13 @@ class Super_model extends CI_Model {
 			$this->build_default_order_by();
 			$this->relationships = $this->get_relationships();
 			$this->primaryIndex = $this->get_table_indexes( "PRIMARY" ) [ 0 ];
+			$this->findInfoByStructure( $this->table_name );
 		} elseif ($framework_configured) {
 			$this->databaseTables = $this->get_db_tables();
 		}
 		$this->build_dependency();
 		// Set the global use_phpmyadmin_features....
-		$this->use_phpmyadmin_features = $this->config->item("use_phpmyadmin_features"); 
+		$this->use_phpmyadmin_features = $this->config->item( "use_phpmyadmin_features" );
 	}
 
 	/**
@@ -96,10 +97,10 @@ class Super_model extends CI_Model {
 	}
 
 	public function get_record( $identificativo, $tipo = "", $start = 0, $limit = 999999, $extra_params = null ) {
-		if (is_null($start)){
+		if (is_null( $start )) {
 			$start = 0;
 		}
-		if (is_null($limit)){
+		if (is_null( $limit )) {
 			$limit = 999999;
 		}
 		return $this->do_get_record( $identificativo, $tipo, $start, $limit, $extra_params );
@@ -120,9 +121,9 @@ class Super_model extends CI_Model {
 	public function symple_query( $sql ) {
 		return $this->do_symple_query( $sql );
 	}
-	
-	public function multi_query($sql){
-		return $this->do_multi_query($sql);
+
+	public function multi_query( $sql ) {
+		return $this->do_multi_query( $sql );
 	}
 
 	public function get_unique_user_code( $codice = "" ) {
@@ -131,7 +132,7 @@ class Super_model extends CI_Model {
 
 	/**
 	 * Get the NON system tables
-	 * 
+	 *
 	 * @return array of rows (object)
 	 */
 	public function get_db_tables( ) {
@@ -164,14 +165,15 @@ class Super_model extends CI_Model {
 	 * db_name (usually this one)
 	 * table_name (the "joined" one, corresponding to $hasRelations->foreign_table)
 	 * display_field (the value of this field is the one we must use in the Select)
-	 * @param string $table_name
+	 * 
+	 * @param string $table_name        	
 	 * @return array
 	 */
 	public function get_info( $table_name = "" ) {
 		if ($this->hasphpMyAdminPma === null) {
 			$this->checkRelationshipsTable();
 		}
-		if ($this->hasphpMyAdminPma) {
+		if ($this->hasphpMyAdminPma and !is_array($this->table_structure [ "tableInfos" ])) {
 			$sql = "
 			SELECT * FROM `phpmyadmin`.`pma__table_info` WHERE
 			`db_name` = '{$this->db->database}' AND
@@ -179,8 +181,9 @@ class Super_model extends CI_Model {
 			";
 			$query_resource = $this->db->query( $sql );
 			$this->table_info = $query_resource->result( "object" );
-		} else {
-			$this->findInfoByStructure($table_name);
+			$this->table_structure [ "tableInfos" ] = $this->table_info;
+		} elseif (!$this->hasphpMyAdminPma) {
+			$this->table_info = $this->findInfoByStructure( $table_name );
 		}
 		return $this->table_info;
 	}
@@ -197,7 +200,7 @@ class Super_model extends CI_Model {
 	 * where
 	 * column_name = the column to use for sorting
 	 * ordering = ASC|DESC
-	 * 
+	 *
 	 * @param array $array_order        	
 	 */
 	final public function change_order_by( $array_order = array() ) {
@@ -210,11 +213,94 @@ class Super_model extends CI_Model {
 	}
 
 	/**
+	 * Change the default order for query.
+	 *
+	 * @param string $string        	
+	 */
+	final public function set_order_by( $string = "ID" ) {
+		$this->default_order_by = $string;
+	}
+
+	/**
+	 * $hasRelations = stdClass, with
+	 * foreign_db (usually this one),
+	 * foreign_table (the joined table)
+	 * foreign_field (the field of the foreign table)
+	 * master_db (this one)
+	 * master_table ( $table_name)
+	 * master_filed ( $column_name )
+	 *
+	 * @param string $targetValue        	
+	 * @param array $tableRelations        	
+	 * @return mixed|boolean
+	 */
+	public function checkRelations( $targetValue = "", $tableRelations = array() ) {
+		$filteredArray = array_filter( $tableRelations, function ( $item ) use ($targetValue ) {
+			return $item->master_field === $targetValue;
+		} );
+		if (! empty( $filteredArray )) {
+			return reset( $filteredArray );
+		} else {
+			return false;
+		}
+	}
+
+	public function getRelatedField( $hasRelations, $row ) {
+		// we have a relationship between a field of this table and another filed in another table....
+		/*$tableInfos = $this->get_info( $hasRelations->foreign_table );
+		$joined_table_structure = "joined_table_structure_{$hasRelations->foreign_table}";
+		// Do we have the info from the table $hasRelations->foreign_table structure?
+		if ($tableInfos == null and sizeof( $this->$joined_table_structure [ "tableInfos" ] ) > 0) {
+			// Ops, we got from the table
+			$tableInfos = $this->$joined_table_structure [ "tableInfos" ];
+		}
+		$joinedTable = strtolower( $tableInfos [ 0 ]->table_name );
+		$joinedTableModel = "model_{$joinedTable}";
+		$masterField = $hasRelations->master_field;
+		$displayField = $tableInfos [ 0 ]->display_field;*/		
+		$joinedTable = strtolower($hasRelations->foreign_table);
+		$joinedTableModel = "model_{$joinedTable}";
+		// Do we have the correspondig model?
+		if ($joinedTable !== null and $this->$joinedTableModel == null) {
+			// No? Let's load it!
+			$ucfirst = ucfirst( $joinedTable );
+			$this->super_lib->load->model( "{$ucfirst}/{$joinedTableModel}" );
+			$this->super_lib->build_dependency();
+		}
+		$displayField = $this->super_lib->$joinedTableModel->table_structure["tableInfos"][0]->display_field;
+		$search = array (
+				"PRIMARY" => array (
+						"{$hasRelations->foreign_field}" => $row->{$hasRelations->master_field} 
+				) 
+		);
+		$joinedRecords = $this->super_lib->$joinedTableModel->get_record( $search, "record_by_primary" ) [ 0 ];
+		if (isset( $joinedRecords->$displayField )) {
+			return $joinedRecords->$displayField;
+		} else {
+			return "n/a";
+		}
+	}
+
+	public function getRelatedFieldName( $hasRelations ) {
+		// we have a relationship between a field of this table and another filed in another table....
+		$tableInfos = $this->get_info( $hasRelations->foreign_table );
+		// Do we have the info from the table $hasRelations->foreign_table structure?
+		if ($tableInfos == null and is_array( $this->table_structure [ "tableInfos" ] ) and sizeof( $this->table_structure [ "tableInfos" ] ) > 0) {
+			// Ops, we got from the table
+			$tableInfos = $this->table_structure [ "tableInfos" ];
+		}
+		if (! is_array( $tableInfos )) {
+			return $hasRelations->master_field;
+		}
+		return "{$tableInfos[0]->display_field} from {$tableInfos[0]->table_name}";
+	}
+
+	/**
 	 * PROTECTED functions
 	 */
 	/**
 	 * Retrieve primary keys as defined in the table
-	 * 
+	 *
 	 * @param string $table_name        	
 	 * @return boolean|array
 	 */
@@ -224,7 +310,7 @@ class Super_model extends CI_Model {
 
 	/**
 	 * Retrieve secondary keys as defined in the table
-	 * 
+	 *
 	 * @param string $table_name        	
 	 * @return boolean|array
 	 */
@@ -234,7 +320,7 @@ class Super_model extends CI_Model {
 
 	/**
 	 * Return the table structure as defined in the database
-	 * 
+	 *
 	 * @param string $table_name        	
 	 * @param string $instance_variable        	
 	 * @return stdClass
@@ -245,7 +331,7 @@ class Super_model extends CI_Model {
 			$this->table_header [ ] = array (
 					"name" => $structure->Field,
 					"definition" => $structure->Comment,
-					"type" => $structure->Type,
+					"type" => $structure->Type 
 			);
 		}
 	}
@@ -280,17 +366,8 @@ class Super_model extends CI_Model {
 	}
 
 	/**
-	 * Change the default order for query.
-	 *
-	 * @param string $string        	
-	 */
-	final public function set_order_by( $string = "ID" ) {
-		$this->default_order_by = $string;
-	}
-
-	/**
 	 * Constructs the string to insert into the "where" condition of a record retrieval query
-	 * 
+	 *
 	 * @param unknown $index_values        	
 	 * @return string
 	 */
@@ -321,7 +398,7 @@ class Super_model extends CI_Model {
 
 	/**
 	 * Builds the "where" structure to use in a record update/delete query
-	 * 
+	 *
 	 * @param array $index_values        	
 	 * @return array
 	 */
@@ -339,7 +416,7 @@ class Super_model extends CI_Model {
 
 	/**
 	 * Verify that the incoming "where" conditions are consistent with the declaration of the table's indexes
-	 * 
+	 *
 	 * @param array $table_def        	
 	 * @param array $search_def        	
 	 * @return boolean
@@ -372,8 +449,8 @@ class Super_model extends CI_Model {
 	final protected function build_where_from_record( $record, $keys ) {
 		$where = array ();
 		foreach ( $keys as $key => $value ) {
-			if (isset( $record [ $key ] )) {
-				$where [ $key ] = $record [ $key ];
+			if (isset( $record [ $value->Column_name ] )) {
+				$where [ $value->Column_name ] = $record [ $value->Column_name ];
 			}
 		}
 		return $where;
@@ -418,29 +495,26 @@ class Super_model extends CI_Model {
 	 * PRIVATE functions
 	 */
 	private function findInfoByStructure( $tableName ) {
-		$instanceName = "joined_table_structure_{$tableName}";
-		$this->do_get_table_structure( $tableName, $instanceName );
-		if (is_array($this->$instanceName)){
-			foreach ($this->$instanceName as $key => $fieldDefinition) {
+		$this->do_get_table_structure( $tableName, "table_structure" );
+		if (is_array( $this->table_structure ) and !is_array($this->table_structure [ "tableInfos" ])) {
+			foreach ( $this->table_structure as $key => $fieldDefinition ) {
 				// Search for the "s" in the Comment definition
-				$def = explode(",", $fieldDefinition->Comment);
-				// h = hidden (do not show neither column name nor column value)
-				if (array_search("s", $def) !== false){
+				$def = explode( ",", $fieldDefinition->Comment );
+				if (array_search( "s", $def ) !== false) {
 					$relationDefinition = new stdClass();
 					$relationDefinition->db_name = $this->db->database;
 					$relationDefinition->table_name = $tableName;
 					$relationDefinition->display_field = $fieldDefinition->Field;
-					$this->$instanceName["tableInfos"][] = $relationDefinition;
+					$this->table_structure [ "tableInfos" ] [ ] = $relationDefinition;
 				}
-			}			
-			return $this->$instanceName;
+			}
 		}
-		return array();
+		return $this->table_structure[ "tableInfos" ] ;
 	}
-	
+
 	private function findRelationsByStructure( ) {
-		$structure = array();
-		if (!is_array($this->databaseTables)){
+		$structure = array ();
+		if (! is_array( $this->databaseTables )) {
 			return $structure;
 		}
 		foreach ( $this->table_structure as $field ) {
@@ -462,9 +536,9 @@ class Super_model extends CI_Model {
 								"foreign_table" => $foreignTable,
 								"master_db" => $this->db->database,
 								"master_field" => $masterField,
-								"master_table" => $this->table_name
+								"master_table" => $this->table_name 
 						);
-						$structure [ ] = (object) $relation;
+						$structure [ ] = ( object ) $relation;
 					}
 				}
 			}
@@ -474,7 +548,7 @@ class Super_model extends CI_Model {
 
 	private function checkRelationshipsTable( ) {
 		// Early check....
-		if (!$this->use_phpmyadmin_features){
+		if (! $this->use_phpmyadmin_features) {
 			$this->hasphpMyAdminPma = false;
 			return false;
 		}
@@ -516,15 +590,15 @@ class Super_model extends CI_Model {
 	private function do_symple_query( $sql ) {
 		return $this->db->query( $sql );
 	}
-	
-	private function do_multi_query($sql){
+
+	private function do_multi_query( $sql ) {
 		$this->db->multi_query( $sql );
 		do {
 			if ($result = $this->db->conn_id->store_result()) {
-				$result_set = $result->fetch_all(MYSQLI_ASSOC);
+				$result_set = $result->fetch_all( MYSQLI_ASSOC );
 				$result->free();
 			}
-		} while ($this->db->conn_id->next_result());
+		} while ( $this->db->conn_id->next_result() );
 		return $result_set;
 	}
 
@@ -587,7 +661,7 @@ class Super_model extends CI_Model {
 
 	/**
 	 * Returns the user identifier corresponding to that unique code
-	 * 
+	 *
 	 * @param string $codice        	
 	 * @return id of csd_users table
 	 */
@@ -606,7 +680,7 @@ class Super_model extends CI_Model {
 
 	/**
 	 * Finds and returns the primary key definition of the table $table_name
-	 * 
+	 *
 	 * @param string $table_name        	
 	 * @return array of objects|boolean
 	 */
@@ -629,7 +703,7 @@ class Super_model extends CI_Model {
 
 	/**
 	 * Finds and returns the FULL key definition of the table $table_name (Primary and any other kind of keys)
-	 * 
+	 *
 	 * @param string $table_name        	
 	 * @param string $index_name        	
 	 * @return array of objects

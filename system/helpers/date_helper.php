@@ -121,6 +121,7 @@ if (! function_exists( 'standard_date' )) {
 				'DATE_RFC1123' => '%D, %d %M %Y %H:%i:%s %O',
 				'DATE_RSS' => '%D, %d %M %Y %H:%i:%s %O',
 				'DATE_W3C' => '%Y-%m-%dT%H:%i:%s%Q',
+				'DATE_W3C_FORM' => '%Y-%m-%dT%H:%i:%s',
 				'DATE_EURO_SHORT' => '%d/%m/%Y',
 				'DATE_EURO_SHORT_H' => '%D, %d %M %Y',
 				'DATE_EURO_LONG' => '%d/%m/%Y %H:%i',
@@ -369,6 +370,14 @@ if (! function_exists( 'mysql_to_unix' )) {
 		
 		// YYYYMMDDHHMMSS
 		return mktime( substr( $time, 8, 2 ), substr( $time, 10, 2 ), substr( $time, 12, 2 ), substr( $time, 4, 2 ), substr( $time, 6, 2 ), substr( $time, 0, 4 ) );
+	}
+}
+
+if (!function_exists("html_datetime_to_unix")){
+	function html_datetime_to_unix($datetime_local = ""){
+		$date = new DateTime($datetime_local);
+		$timestamp = $date->getTimestamp();
+		return $timestamp;
 	}
 }
 

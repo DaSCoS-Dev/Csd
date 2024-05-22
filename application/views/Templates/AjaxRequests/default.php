@@ -9,7 +9,7 @@ if (! defined ( 'BASEPATH' )) {
 }
 class ajax_{$library_name_L} extends CI_Controller {
 
-	protected \$table_headers, \$ordered_table_headers, \$primaryIndex;
+	protected \$table_headers, \$ordered_table_headers, \$primaryIndex, \$relationships;
 	
 	public function __construct() {
 		parent::__construct ();
@@ -18,6 +18,7 @@ class ajax_{$library_name_L} extends CI_Controller {
 		\$this->table_headers = \$this->model_{$library_name_L}->table_structure;
 		\$this->ordered_table_headers = \$this->super_lib->do_exec( "chooseTableHeaderOrder", \$this->model_{$library_name_L}->get_table_header());
 		\$this->primaryIndex = \$this->model_{$library_name_L}->getPrimaryIndex();
+		\$this->relationships = \$this->model_{$library_name_L}->get_table_relationships();
 	}
 
 	public function get_{$library_name_L}_tabella(\$filtro = null) {
@@ -30,7 +31,7 @@ class ajax_{$library_name_L} extends CI_Controller {
 		\$sorting_dir = \$post_dati [ "order" ] [ 0 ] [ "dir" ];
 		if (trim( \$sorting ) != "") {
 			\$this->model_{$library_name_L}->set_order_by( "`{\$sorting}` {\$sorting_dir}" );
-		}
+		}		
 		\$objects = \$this->model_{$library_name_L}->get_record ( null, "{$library_name_L}", \$post_dati ["start"], \$post_dati ["length"] );
 		\$this->prepare_table ( \$objects, \$post_dati );
 	}
@@ -47,16 +48,6 @@ class ajax_{$library_name_L} extends CI_Controller {
 			\$result->iTotalDisplayRecords = \$post_dati["length"];
 		}
 		foreach ( \$records as \$idx => \$row ) {
-			if (is_int ( \$idx / 2 )) {
-				\$style_row = "table.dataTable tr.odd";
-			} else {
-				\$style_row = "table.dataTable tr.even";
-			}
-			\$result->aaData [\$idx ] = array (
-					"DT_RowAttr" => array (
-							"style" => \$style_row 
-					)
-			);
 			\$this->prepareHeaders( \$result->aaData [ \$idx ], \$row );
 		}
 		\$coded = json_encode ( \$result );
@@ -86,15 +77,19 @@ class ajax_{$library_name_L} extends CI_Controller {
 					</div>
 					<div class=\"col-9\">
 						<div id=\"action_buttons_row_{$library_name_L}_{\$row->\$column_name}\" style=\"cursor: pointer;\">
- 				 			<span id=\"image_edit\" title=\"Edit\" alt=\"Edit\" onclick=\"xajax_execute('{$library_name_U}/Main_{$library_name_L}', 'index', 'edit', {\$row->\$column_name});\">
+ 				 			<span id=\"image_edit\" class=\"btn btn-sm btn-outline-success\" title=\"Edit\" alt=\"Edit\" onclick=\"xajax_execute('{$library_name_U}/Main_{$library_name_L}', 'index', 'edit', {\$row->\$column_name});\">
  				 				{\$this->view_assembler->modifica_documento()}
  				 			</span>
- 							<span id=\"image_delete\" alt=\"Delete\" title=\"Delete\" onclick=\"xajax_execute('{$library_name_U}/Main_{$library_name_L}', 'index', 'delete', {\$row->\$column_name});\">
+ 							<span id=\"image_delete\" class=\"btn btn-sm btn-outline-danger\" alt=\"Delete\" title=\"Delete\" onclick=\"xajax_execute('{$library_name_U}/Main_{$library_name_L}', 'index', 'delete', {\$row->\$column_name});\">
  								{\$this->view_assembler->cancella_documento()}
  							</span>
  						</div>
  					</div>";
 			} else {
+ 				\$hasRelations = \$this->model_{$library_name_L}->checkRelations( \$column_name, \$this->relationships );
+				if (\$hasRelations !== false) {
+					\$data = \$this->model_{$library_name_L}->getRelatedField( \$hasRelations, \$row );
+				}
 				\$dataTableDefinition[] = \$data;
 			}
 		}
