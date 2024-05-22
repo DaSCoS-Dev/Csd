@@ -61,8 +61,9 @@ class Main_{$library_name_L} extends Super_lib {
 		\$visibility_options = array();
 		\$table_headers = \$this->model->get_table_header();
 		\$this->chooseTableHeaderOrder(\$table_headers);
+		\$model_name = get_class(\$this->model);
 		foreach (\$table_headers as \$idx => \$header){
-			\$tableHeads .= \$this->view->build( "table_header", \$header );	
+			\$tableHeads .= \$this->view->build( "table_header", array("headers" => \$header, "model" => \$model_name ));	
 			\$this->chooseTableHeaderVisibility(\$header, \$idx, \$visibility_options);
 		}
 		if (sizeof(\$visibility_options) > 0){
@@ -119,8 +120,9 @@ class Main_{$library_name_L} extends Super_lib {
 			\$idDb = \$this->model->update_record( \$object );
 		}
 		if (\$idDb !== false) {
-			\$this->index();
+			\$this->show_records_table();
 			\$this->message( "Successfully saved !!", "Ok" );
+			\$this->response->script("setTimeout( function() { redraw_data_table() }, 550);");
 		} else {
 			\$this->error( "Got errors during saving of {$library_name_U}...", "Ko" );
 		}

@@ -101,7 +101,7 @@ class Model_{$library_name_L} extends Super_model {
 		if (\$existingRecord->num_rows > 0) {
 			\$result = \$this->db->update( \$this->table_name, \$record, \$orderQuery );
 			if (\$result) {
-				return \$record [\$this->index_structure["PRIMARY"][0]];
+				return \$record [\$this->index_structure["PRIMARY"][0]->Column_name];
 			} else {
 				return false;
 			}

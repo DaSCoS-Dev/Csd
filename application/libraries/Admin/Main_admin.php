@@ -14,8 +14,7 @@ class Main_admin extends Super_lib {
 		} else {
 			parent::__construct( $params );
 		}
-		$this->ci = get_instance();
-		$this->load->helper( "security" );
+		$this->ci = get_instance();		
 		// Carico il model
 		$this->load->model_options( "Admin/model_admin", $params );
 		// Carico vista
@@ -35,6 +34,9 @@ class Main_admin extends Super_lib {
 	 * Build the administrations Menu and the help
 	 */
 	protected function index( ) {
+		if (! $this->is_admin() and ! $this->is_logged_in()) {
+			return $this->error( "You are NOT allowed to access this class" );
+		}
 		$html = $this->view->build( "build_menu" );
 		$this->response->assign( "admin_menu_struct", "innerHTML", $html );
 		$help = $this->view->build( "main_admin_help" );
@@ -69,6 +71,9 @@ class Main_admin extends Super_lib {
 	 * @param number $step        	
 	 */
 	protected function install( $step = 1 ) {
+		if ($this->config->item( "framework_configured" ) !== false) {
+			return $this->error( "You are NOT allowed to access this class" );
+		}
 		if (intval( $step ) === 1) {
 			$this->ci->config->load( "database", true );
 			$this->load_install_options();
@@ -90,6 +95,9 @@ class Main_admin extends Super_lib {
 	 * @param array $form_input        	
 	 */
 	protected function save_user( $form_input ) {
+		if ($this->config->item( "framework_configured" ) !== false) {
+			return $this->error( "You are NOT allowed to access this class" );
+		}
 		$this->load->model( 'tank_auth/users' );
 		require_once ( "{$_SERVER['DOCUMENT_ROOT']}/application/helpers/PasswordHash.php" );
 		$this->build_dependency();
@@ -126,6 +134,9 @@ class Main_admin extends Super_lib {
 	 * @return boolean
 	 */
 	protected function test_db_connection( $form_input ) {
+		if ($this->config->item( "framework_configured" ) !== false) {
+			return $this->error( "You are NOT allowed to access this class" );
+		}
 		$this->ci->config->load( "database", true );
 		$this->load_install_options();
 		if (! $this->check_base_input( $form_input, "install" )) {
@@ -133,12 +144,12 @@ class Main_admin extends Super_lib {
 		}
 		mysqli_report( MYSQLI_REPORT_ERROR );
 		$conn = $this->create_connection( $form_input );
-		if (! $this->validate_connection($conn, $form_input)) {
-			if (!isset($form_input["force_db_creation"])) {
+		if (! $this->validate_connection( $conn, $form_input )) {
+			if (! isset( $form_input [ "force_db_creation" ] )) {
 				return false;
 			}
-			$conn = $this->create_connection($form_input, false);
-			if (! $this->validate_forced_connection($conn, $form_input)) {
+			$conn = $this->create_connection( $form_input, false );
+			if (! $this->validate_forced_connection( $conn, $form_input )) {
 				return false;
 			}
 		}
@@ -162,6 +173,9 @@ class Main_admin extends Super_lib {
 	 * @return boolean
 	 */
 	protected function change_config( $form_input, $action = "configure", $immediate_redirect = true ) {
+		if ($this->config->item( "framework_configured" ) !== false and ! $this->is_admin() and ! $this->is_logged_in()) {
+			return $this->error( "You are NOT allowed to access this class" );
+		}
 		if ($form_input [ "discriminator" ] === "database") {
 			$this->load_install_options();
 		} else {
@@ -204,6 +218,9 @@ class Main_admin extends Super_lib {
 	 * build the various dropdown and form
 	 */
 	protected function create_new_functionality_form( ) {
+		if (! $this->is_admin() and ! $this->is_logged_in()) {
+			return $this->error( "You are NOT allowed to access this class" );
+		}
 		// Show available and unused database tables
 		$tables = $this->model->get_db_tables();
 		// Create the naming fields
@@ -227,25 +244,23 @@ class Main_admin extends Super_lib {
 	 * @param array $input        	
 	 */
 	protected function create_new_functionality( $input, $force = false ) {
+		if (! $this->is_admin() and ! $this->is_logged_in()) {
+			return $this->error( "You are NOT allowed to access this class" );
+		}
 		// No check is done cause there are no "custom fields", except the existance of at least a model
 		if (! isset( $input [ "discriminator" ] ) or $input [ "discriminator" ] !== "functionality") {
 			$this->error( "You have an error in the form. Please try again and ensure the field \'discriminator\' is present", "Error", 4000 );
 			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'create_new_functionality_form') } , 4100 ) " );
 			return false;
 		}
-		$stream = file_get_contents( "{$_SERVER['DOCUMENT_ROOT']}/application/config/functionality.php" );
-		if ($stream === false) {
-			$this->error( "Cannot open file config/functionality.php for read. Please check the existence of the file and its permissions", "Error", 4000 );
-			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'create_new_functionality_form') } , 4100 ) " );
-			return false;
-		}
-		$just_done = $this->check_for_functionality( $stream, $input [ "functionality_table" ] );
+		$library_name_U = ucfirst( strtolower( $input [ "functionality_table" ] ) );
+		$library_name_L = strtolower( $library_name_U );
+		$just_done = file_exists( "{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/{$library_name_L}.php" );
 		if (! $just_done or $force) {
 			// Take the templates and create the structure!!
 			$this->buildFunctionalityStructure( $input [ "functionality_table" ] );
 		} else {
-			$this->error( "The chosen table has already been used to create the basic structures therefore it is not possible to reuse it", "Error", 4000 );
-			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'create_new_functionality_form') } , 4100 ) " );
+			$this->confirm_action( "Discard all manual change", "The chosen table has already been used to create the basic structures<br>If you want to REBUILD the functionality and loose any manual change you do, press &apos;OK&apos;", "function() { xajax_execute('Admin/Main_admin', 'create_new_functionality', xajax.getFormValues('config_form_functionality', true), true) }" );
 			return false;
 		}
 		$this->message( "Functionality has been built right now!", "Success" );
@@ -257,50 +272,75 @@ class Main_admin extends Super_lib {
 	private function buildFunctionalityStructure( $table_name ) {
 		$library_name_U = ucfirst( strtolower( $table_name ) );
 		$library_name_L = strtolower( $library_name_U );
+		$index_file = "{$_SERVER["DOCUMENT_ROOT"]}/application/index.html";
 		// AjaxRequests
+		$ajax_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/controllers/ajax_requests/{$library_name_U}/";
 		$ajax_def = $this->load->view( "Templates/AjaxRequests/default.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L 
 		), true );
-		mkdir( "{$_SERVER["DOCUMENT_ROOT"]}/application/controllers/ajax_requests/{$library_name_U}/", 0755, true );
-		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/controllers/ajax_requests/{$library_name_U}/ajax_{$library_name_L}.php", $ajax_def );
+		mkdir( $ajax_dir, 0755, true );
+		file_put_contents( "{$ajax_dir}/ajax_{$library_name_L}.php", $ajax_def );
+		copy( $index_file, "{$ajax_dir}/index.html" );
 		// Classes
+		$class_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/";
 		$class_def = $this->load->view( "Templates/Classes/default.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L 
 		), true );
-		mkdir( "{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/", 0755, true );
-		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/{$library_name_L}.php", $class_def );
+		mkdir( $class_dir, 0755, true );
+		file_put_contents( "{$class_dir}/{$library_name_L}.php", $class_def );
+		copy( $index_file, "{$class_dir}/index.html" );
 		// Libraries
+		$library_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/{$library_name_U}/";
 		$lib_def = $this->load->view( "Templates/Libraries/default.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L 
 		), true );
-		mkdir( "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/{$library_name_U}/", 0755, true );
-		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/{$library_name_U}/Main_{$library_name_L}.php", $lib_def );
+		mkdir( $library_dir, 0755, true );
+		file_put_contents( "{$library_dir}/Main_{$library_name_L}.php", $lib_def );
+		copy( $index_file, "{$library_dir}/index.html" );
 		// Models
+		$model_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$library_name_U}/";
 		$model_def = $this->load->view( "Templates/Models/default.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L,
 				"table_name" => $table_name 
 		), true );
-		mkdir( "{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$library_name_U}/", 0755, true );
-		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$library_name_U}/model_{$library_name_L}.php", $model_def );
+		mkdir( $model_dir, 0755, true );
+		file_put_contents( "{$model_dir}/model_{$library_name_L}.php", $model_def );
+		copy( $index_file, "{$model_dir}/index.html" );
 		// Views
-		$view_struct_def = $this->load->view( "Templates/Views/general_structure.php", array (), true );
-		mkdir( "{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/", 0755, true );
-		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/general_structure.php", $view_struct_def );
-		$table_struct_def = $this->load->view( "Templates/Views/table_structure.php", array (), true );
-		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/table_structure.php", $table_struct_def );
-		$table_edit_structure_def = $this->load->view( "Templates/Views/edit_structure.php", array (), true );
-		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/edit_structure.php", $table_edit_structure_def );
+		$views_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/";
+		$view_struct_def = $this->load->view( "Templates/Views/general_structure.php", array (
+				"library_name_U" => $library_name_U,
+				"library_name_L" => $library_name_L,
+				"table_name" => $table_name 
+		), true );
+		mkdir( $views_dir, 0755, true );
+		file_put_contents( "{$views_dir}/general_structure.php", $view_struct_def );
+		$table_struct_def = $this->load->view( "Templates/Views/table_structure.php", array (
+				"library_name_U" => $library_name_U,
+				"library_name_L" => $library_name_L,
+				"table_name" => $table_name 
+		), true );
+		file_put_contents( "{$views_dir}/table_structure.php", $table_struct_def );
+		$table_edit_structure_def = $this->load->view( "Templates/Views/edit_structure.php", array (
+				"library_name_U" => $library_name_U,
+				"library_name_L" => $library_name_L,
+				"table_name" => $table_name 
+		), true );
+		file_put_contents( "{$views_dir}/edit_structure.php", $table_edit_structure_def );
+		copy( $index_file, "{$views_dir}/index.html" );
 		// Views_assembler
+		$assembler_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/Views_assembler/{$library_name_U}/";
 		$views_assembler_def = $this->load->view( "Templates/Views_assembler/default.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L 
 		), true );
-		mkdir( "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/Views_assembler/{$library_name_U}/", 0755, true );
-		file_put_contents( "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/Views_assembler/{$library_name_U}/Main_{$library_name_L}_views.php", $views_assembler_def );
+		mkdir( $assembler_dir, 0755, true );
+		file_put_contents( "{$assembler_dir}/Main_{$library_name_L}_views.php", $views_assembler_def );
+		copy( $index_file, "{$assembler_dir}/index.html" );
 	}
 
 	/**
@@ -368,7 +408,7 @@ class Main_admin extends Super_lib {
 		$sql = "SHOW DATABASES LIKE '{$database}'";
 		$conn->query( $sql );
 		if ($conn->error !== "") {
-			return $this->got_db_error($conn);
+			return $this->got_db_error( $conn );
 		}
 		return true;
 	}
@@ -378,8 +418,8 @@ class Main_admin extends Super_lib {
 		$sql = "CREATE DATABASE `test_{$database}_validation` DEFAULT CHARACTER SET utf8mb4;";
 		$conn->query( $sql );
 		if ($conn->error !== "") {
-			return $this->got_db_error($conn);
-		} else {			
+			return $this->got_db_error( $conn );
+		} else {
 			return true;
 		}
 	}
@@ -389,19 +429,19 @@ class Main_admin extends Super_lib {
 		$sql = "CREATE TABLE `test_{$database}_validation`.`test` ( `field` INT NOT NULL ) ENGINE = MyISAM;";
 		$conn->query( $sql );
 		if ($conn->error !== "") {
-			return $this->got_db_error($conn);
+			return $this->got_db_error( $conn );
 		} else {
 			$conn->query( "DROP DATABASE `test_{$database}_validation`" );
 			return true;
 		}
 	}
 
-	private function got_db_error($conn){
+	private function got_db_error( $conn ) {
 		$this->display_db_error( $conn->error );
 		$conn->close();
 		return false;
 	}
-	
+
 	private function display_db_error( $error ) {
 		$conn_err = escape_single_quote( $error );
 		$this->error( "Database Error. Please check the form.<br>The Database Server tells: <strong>{$conn_err}</strong>", "Error", "5000" );
@@ -539,7 +579,11 @@ class Main_admin extends Super_lib {
 				"Title" => "About Logo",
 				"Popover" => "This is the Logo of your Framework, relative to {$_SERVER['DOCUMENT_ROOT']}/assets/img/." 
 		);
-		$this->options [ "framework" ] [ "site_name" ] = $this->ci->config->config [ "site_name" ];
+		$this->options [ "framework" ] [ "site_name" ] = array (
+				"value" => $this->ci->config->config [ "site_name" ],
+				"Title" => "About Site Name",
+				"Popover" => "The name of your Framework/Site" 
+		);
 		// EMAIL OPTIONS
 		$this->options [ "email" ] [ "mail_host" ] = array (
 				"value" => $this->ci->config->config [ "email" ] [ "mail_host" ],

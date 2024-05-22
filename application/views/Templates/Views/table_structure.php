@@ -9,9 +9,15 @@ if (! defined( 'BASEPATH' )) {
 }
 
 \$output = <<<HTML
-
+<a href="javascript:void(0)" class="btn btn-primary" onclick="redraw_data_table()">
+	<i class="bi bi-arrow-clockwise">Reload</i>
+</a>
+<a href="javascript:void(0)" class="btn btn-success" onclick="xajax_execute('{$library_name_U}/Main_{$library_name_L}', 'index', 'new')">
+	<i class="bi bi-file-earmark-plus">New</i>
+</a>
+<hr></hr>
 <!-- START Tabella -->
-		<table id="record_table"  class="col w-100 fs-6 hover">
+		<table id="record_table"  class="w-100 hover table table-striped">
 			<!-- START Intestazione Tabella -->
 			<thead id="thead_record_table">
 				<tr>

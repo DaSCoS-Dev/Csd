@@ -111,6 +111,8 @@ CREATE TABLE `csd_user_profiles` (
 
 -- --------------------------------------------------------
 
+-- --------------------------------------------------------
+
 --
 -- Struttura della tabella `exampleTable`
 --
@@ -131,10 +133,10 @@ CREATE TABLE `exampleTable` (
 --
 
 INSERT INTO `exampleTable` (`id`, `id_joinedTable`, `name`, `unique_code`, `insert_date`, `update_date`, `active`) VALUES
-(1, 1, 'main table 1', 'AbCd3', 1716213599, 1716213599, 1),
-(2, 1, 'main table 2', 'xyz-31', 1716272696, 1716213599, 0),
-(3, 2, 'main table 3', 'kjl-qwe-54', 1716297092, 1716213599, 0),
-(4, 2, 'main table 4', 'jntla987', 1716169629, 1716169629, 0);
+(1, 1, '1st value for mt', 'AbCd3', 1716213599, 1716213599, 1),
+(2, 2, '2nd value for mt', 'xyz-31', 1716272696, 1716213599, 0),
+(3, 2, '3th value for mt', 'kjl-qwe-54', 1716297092, 1716213599, 0),
+(4, 1, '4th value for mt', 'jntla987', 1716169629, 1716169629, 0);
 
 -- --------------------------------------------------------
 

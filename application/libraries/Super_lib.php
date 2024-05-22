@@ -28,7 +28,7 @@ class Super_lib {
 		if ($this->initialized()) {
 			// Per sicurezza faccio solo il rebuild
 			return $this->build_dependency();
-		}
+		}		
 		if ($params != null) {
 			foreach ( $params as $var => $value ) {
 				$this->$var = $value;
@@ -47,6 +47,8 @@ class Super_lib {
 			$this->start_xajax();
 			// Verifico login
 			$this->check_logged_in();
+		} else {
+			$this->load->helper( "security" );
 		}
 		$this->set_initialized();
 		if ($name === "Super_lib") {
@@ -731,7 +733,19 @@ class Super_lib {
 	}
 	
 	protected function parseRecord(&$record){
-		return true;
+		$ordered_table_headers = $this->chooseTableHeaderOrder( $this->model->get_table_header() );
+		foreach ( $ordered_table_headers as $columnDefinition ) {
+			$column_name = $columnDefinition [ "name" ];
+			$def = explode( ",", $columnDefinition [ "definition" ] );
+			// If it's a Date, convert in the appropriate format
+			if (in_array( "d", $def )) {
+				$record[$column_name] = html_datetime_to_unix($record[$column_name]);
+			} elseif (in_array( "n", $def )) {
+				$record[$column_name] = intval($record[$column_name]);
+			} else {
+				$record[$column_name] = trim(xss_clean($record[$column_name]));
+			}
+		}
 	}
 }
 ?>
