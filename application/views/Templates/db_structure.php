@@ -122,7 +122,7 @@ CREATE TABLE `exampleTable` (
   `id` int(10) UNSIGNED NOT NULL COMMENT 'n,o:1',
   `id_joinedTable` int(10) UNSIGNED NOT NULL COMMENT 'n,o:2',
   `name` tinytext DEFAULT NULL COMMENT 't,o:4',
-  `unique_code` tinytext NOT NULL COMMENT 't,o:3',
+  `unique_code` tinytext NOT NULL COMMENT 's,t,o:3',
   `insert_date` int(10) UNSIGNED NOT NULL COMMENT 'd,o:6',
   `update_date` int(10) UNSIGNED NOT NULL COMMENT 'd,o:5',
   `active` tinyint(1) DEFAULT 0 COMMENT 'n'
