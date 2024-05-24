@@ -72,6 +72,11 @@ $db["default"]["swap_pre"] = "";
 $db["default"]["autoinit"] = TRUE;
 $db["default"]["stricton"] = FALSE;
 $db["default"]["save_queries"] = FALSE;
+if ($CFG->config["debug_enabled"]){
+	$db["default"]["db_debug"] = true;
+	$db["default"]["save_queries"] = true;
+	$db["default"]["trace_sql"] = true;
+}
 
 /* End of file database.php */
 /* Location: ./application/config/database.php */
