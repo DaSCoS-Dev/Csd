@@ -466,9 +466,7 @@ class xajax {
 			// Nessun output per un errore!!
 			// Output di errore SOLO se bErrorHandler o NON ha errori
 			if (! $this->has_errors or ( $this->bErrorHandler )) {
-				// ob_start(); // Avvio il buffer...
-				// $out = ob_get_contents();
-				// ob_end_clean(); // e lo cancello subito...
+				$this->ci->benchmark->mark("Csd_exit");
 				$this->objResponseManager->send();
 			}
 			// END Mod by Dascos

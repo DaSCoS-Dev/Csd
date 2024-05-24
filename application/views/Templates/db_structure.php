@@ -111,7 +111,18 @@ CREATE TABLE `csd_user_profiles` (
 
 -- --------------------------------------------------------
 
--- --------------------------------------------------------
+--
+-- Struttura della tabella `csd_keys`
+--
+
+DROP TABLE IF EXISTS `csd_keys`;
+CREATE TABLE `csd_keys` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) UNSIGNED DEFAULT NULL,
+  `key` varchar(40) NOT NULL,
+  `ip_addresses` text DEFAULT NULL,
+  `expiration_date` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- Struttura della tabella `exampleTable`
@@ -122,7 +133,7 @@ CREATE TABLE `exampleTable` (
   `id` int(10) UNSIGNED NOT NULL COMMENT 'n,o:1',
   `id_joinedTable` int(10) UNSIGNED NOT NULL COMMENT 'n,o:2',
   `name` tinytext DEFAULT NULL COMMENT 't,o:4',
-  `unique_code` tinytext NOT NULL COMMENT 't,o:3',
+  `unique_code` tinytext NOT NULL COMMENT 's,t,o:3',
   `insert_date` int(10) UNSIGNED NOT NULL COMMENT 'd,o:6',
   `update_date` int(10) UNSIGNED NOT NULL COMMENT 'd,o:5',
   `active` tinyint(1) DEFAULT 0 COMMENT 'n'
@@ -194,8 +205,13 @@ ALTER TABLE `csd_user_autologin`
 ALTER TABLE `csd_user_profiles`
   ADD PRIMARY KEY (`id`);
 
-		
 --
+-- Indici per le tabelle `csd_keys`
+--
+ALTER TABLE `csd_keys`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
 -- Indici per le tabelle `exampleTable`
 --
 ALTER TABLE `exampleTable`
@@ -228,6 +244,13 @@ ALTER TABLE `csd_users`
 --
 ALTER TABLE `csd_user_profiles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+		
+--
+-- AUTO_INCREMENT per la tabella `csd_keys`
+--
+ALTER TABLE `csd_keys`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;		
+--
 		
 --
 -- AUTO_INCREMENT per le tabelle scaricate

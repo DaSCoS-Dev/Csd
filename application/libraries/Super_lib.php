@@ -12,9 +12,11 @@ class Super_lib {
 	protected $profilo_utente;
 
 	public function __construct( $params = null ) {
-		setlocale( LC_TIME, "it_IT.utf8" );
+		$name = get_class( $this );
 		$ci = get_instance();
+		$ci->benchmark->mark( "Csd_{$name}_enter" );
 		$caller = get_class( $ci );
+		setlocale( LC_TIME, "it_IT.utf8" );
 		require_once ( "{$_SERVER['DOCUMENT_ROOT']}/application/classes/main_object.php" );
 		if ($ci->config->config [ "session_use_cookie" ] and ( ! isset( $ci->session ) or ! is_a( $ci->session, "CI_Session" ) )) {
 			$ci->load->library( "Session" );
@@ -28,7 +30,7 @@ class Super_lib {
 		if ($this->initialized()) {
 			// Per sicurezza faccio solo il rebuild
 			return $this->build_dependency();
-		}		
+		}
 		if ($params != null) {
 			foreach ( $params as $var => $value ) {
 				$this->$var = $value;
@@ -36,11 +38,11 @@ class Super_lib {
 		}
 		$this->build_dependency();
 		$this->base_url = base_url();
-		$name = get_class( $this );
 		if (isset( $this->profilo_utente->ID )) {
 			$this->id_utente = $this->profilo_utente->ID;
 		}
 		if ($name === "Super_lib") {
+			$this->load->library("Profiler");
 			$ci->super_lib = $this;
 			$ci->view_assembler->super_lib = $this;
 			$this->get_local_storage();
@@ -57,20 +59,20 @@ class Super_lib {
 		}
 	}
 
-	public function load_class($class_name) {
+	public function load_class( $class_name ) {
 		$subdir = "";
-		if (stripos ( $class_name, "/" ) !== false) {
-			$parts = explode ( "/", $class_name );
-			if (sizeof ( $parts ) > 2) {
-				$class_name = array_pop($parts);
-				$subdir = implode("/", $parts) . "/";
+		if (stripos( $class_name, "/" ) !== false) {
+			$parts = explode( "/", $class_name );
+			if (sizeof( $parts ) > 2) {
+				$class_name = array_pop( $parts );
+				$subdir = implode( "/", $parts ) . "/";
 			} else {
 				$subdir = "{$parts[0]}/";
-				$class_name = $parts [1];
+				$class_name = $parts [ 1 ];
 			}
 		}
-		require_once ("{$_SERVER['DOCUMENT_ROOT']}/{$GLOBALS["application_folder"]}/classes/{$subdir}{$class_name}.php");
-		return new $class_name (  );
+		require_once ( "{$_SERVER['DOCUMENT_ROOT']}/{$GLOBALS["application_folder"]}/classes/{$subdir}{$class_name}.php" );
+		return new $class_name();
 	}
 
 	protected function set_local_storage( $id = 0 ) {
@@ -119,7 +121,7 @@ class Super_lib {
 	protected function enable_tool_tips( ) {
 		$this->response->script( "setTimeout( enable_tool_tips(), 500);" );
 	}
-	
+
 	protected function enable_popover( ) {
 		$this->response->script( "setTimeout( enable_popover(), 500);" );
 	}
@@ -127,7 +129,7 @@ class Super_lib {
 	protected function check_unique_user_code( ) {
 		$this->profilo_utente->Codice = random_string( 'allnum', 12 );
 		// Cerco che non esista già come utente o come "short"
-		if (!$this->config->item("framework_configured")){
+		if (! $this->config->item( "framework_configured" )) {
 			return $this->profilo_utente->Codice;
 		}
 		$esiste = $this->Super_model->get_unique_user_code( $this->profilo_utente->Codice );
@@ -172,13 +174,12 @@ class Super_lib {
 		} elseif (isset( $this->session->userdata [ "profilo_utente" ] )) {
 			$this->profilo_utente = $this->session->userdata [ "profilo_utente" ];
 			return $this->profilo_utente;
-		} elseif (isset($this->profilo_utente->Codice)) {
+		} elseif (isset( $this->profilo_utente->Codice )) {
 			return $this->profilo_utente;
 		}
 		$this->profilo_utente = new stdClass();
 		return $this->profilo_utente;
 	}
-	
 	// Overridable
 	public function do_exec( $what, $with1 = "", $with2 = "", $with3 = "", $with4 = "", $with5 = "" ) {
 		return $this->$what( $with1, $with2, $with3, $with4, $with5 );
@@ -194,10 +195,11 @@ class Super_lib {
 	 * @return xajaxResponse
 	 */
 	final public function execute( ) {
+		$this->benchmark->mark( "Csd_XAJAX_execute_enter" );
 		$args = func_get_args() [ 0 ];
 		// Local storage
 		$pu = $args [ "CUP" ];
-		if (is_null($pu) and ! isset( $this->profilo_utente->ID )) {
+		if (is_null( $pu ) and ! isset( $this->profilo_utente->ID )) {
 			// Non mi arriva un profilo utente, quindi per ora lo considero NUOVO utente anonimo
 			$this->profilo_utente = new stdClass();
 			$this->check_unique_user_code();
@@ -293,14 +295,15 @@ class Super_lib {
 				$this->$lib,
 				$method 
 		), $args );
+		$this->benchmark->mark( "Csd_{$lib}_exit" );
 		if ($this->ci->config->config [ "session_use_cookie" ]) {
 			$this->session->userdata [ "last_activity" ] = time();
 			$this->session->sess_write( true );
 		} else {
 			$this->profilo_utente->navigation->last_activity = time();
 		}
-		$this->set_local_storage( $this->profilo_utente->ID );
-		// Per test, attualmente
+		$this->set_local_storage( $this->profilo_utente->ID );		
+		$this->benchmark->mark( "Csd_XAJAX_execute_exit" );
 		return $this->response;
 	}
 
@@ -363,6 +366,10 @@ class Super_lib {
 		}
 		return intval( $this->id_utente ) <= 3 and intval( $this->id_utente ) > 0;
 	}
+	
+	final protected function is_frameworkConfigured(){
+		return $this->config->item( "framework_configured" ) !== false;
+	}
 
 	final protected function getClientIP( ) {
 		if (array_key_exists( 'HTTP_X_FORWARDED_FOR', $_SERVER )) {
@@ -393,9 +400,9 @@ class Super_lib {
 	final protected function message( $text = "", $title = "Info", $timeout = 5000 ) {
 		return $this->response->script( "show_layer = true; popup('{$title}', '{$text}', 50, {$timeout})" );
 	}
-	
-	final protected function confirm_action($title = "", $text = "", $function = ""){
-		return $this->response->script("modal_confirm('{$title}', '{$text}', $function);");
+
+	final protected function confirm_action( $title = "", $text = "", $function = "" ) {
+		return $this->response->script( "modal_confirm('{$title}', '{$text}', $function);" );
 	}
 
 	protected function converti_campi_data( &$elementi, $complete = false, $custom = "" ) {
@@ -431,10 +438,10 @@ class Super_lib {
 	}
 
 	final protected function get_id_profilo_utente( ) {
-		if(isset($this->session->userdata [ "profile" ])){
+		if (isset( $this->session->userdata [ "profile" ] )) {
 			return intval( $this->session->userdata [ "profile" ]->anagrafica->ID );
 		} else {
-			return intval($this->profilo_utente->anagrafica->ID);
+			return intval( $this->profilo_utente->anagrafica->ID );
 		}
 	}
 
@@ -555,7 +562,7 @@ class Super_lib {
 	protected function get_web_address( ) {
 		return $this->config->config [ "base_url" ];
 	}
-	
+
 	protected function get_site_name( ) {
 		return $this->config->config [ "site_name" ];
 	}
@@ -565,7 +572,7 @@ class Super_lib {
 	}
 
 	final protected function was_in( ) {
-		if (isset($this->session->userdata [ "lib_precedente" ])){
+		if (isset( $this->session->userdata [ "lib_precedente" ] )) {
 			$pos = $this->session->userdata [ "lib_precedente" ];
 		} else {
 			$pos = $this->profilo_utente->navigation->lib_precedente;
@@ -574,7 +581,7 @@ class Super_lib {
 	}
 
 	final protected function am_in( ) {
-		if (isset($this->session->userdata [ "lib_attuale" ])){
+		if (isset( $this->session->userdata [ "lib_attuale" ] )) {
 			$pos = $this->session->userdata [ "lib_attuale" ];
 		} else {
 			$pos = $this->profilo_utente->navigation->lib_attuale;
@@ -583,7 +590,7 @@ class Super_lib {
 	}
 
 	final protected function current_function( ) {
-		if (isset($this->session->userdata [ "posizione" ])){
+		if (isset( $this->session->userdata [ "posizione" ] )) {
 			$pos = $this->session->userdata [ "posizione" ];
 		} else {
 			$pos = $this->profilo_utente->navigation->posizione;
@@ -599,7 +606,7 @@ class Super_lib {
 		$this->response->script( " $('#{$id_elemento}').hide(); " );
 	}
 
-	final protected function show_edit_records($timeout = 50 ) {
+	final protected function show_edit_records( $timeout = 50 ) {
 		$this->response->script( "
 				setTimeout(
 					function() {
@@ -613,13 +620,13 @@ class Super_lib {
 " );
 	}
 
-	final protected function show_html($html = "", $div = "div_home_page"){
+	final protected function show_html( $html = "", $div = "div_home_page" ) {
 		if (! is_a( $this->response, "xajaxResponse" )) {
-			return $this->error("You called <i>show_html</i> without having a <i>xajax_response</i>");
+			return $this->error( "You called <i>show_html</i> without having a <i>xajax_response</i>" );
 		}
 		$this->response->assign( $div, "innerHTML", $html );
 	}
-	
+
 	final protected function show_records_table( $timeout = 50 ) {
 		$this->response->script( "
 				setTimeout(
@@ -635,29 +642,29 @@ class Super_lib {
 				" );
 	}
 
-	protected function chooseTableHeaderVisibility($header, $idx, &$visibility_options){
-		$column_name = $header["name"];
-		$def = explode(",", $header["definition"]);
+	protected function chooseTableHeaderVisibility( $header, $idx, &$visibility_options ) {
+		$column_name = $header [ "name" ];
+		$def = explode( ",", $header [ "definition" ] );
 		// h = hidden (do not show neither column name nor column value)
-		if (array_search("h", $def) !== false){
-			$visibility_options[] = "{ visible: false, target: {$idx}, searchable: false }";
+		if (array_search( "h", $def ) !== false) {
+			$visibility_options [ ] = "{ visible: false, target: {$idx}, searchable: false }";
 		}
 	}
-	
-	protected function extractOrderNumberFromTableDefinition($definition) {
-		preg_match('/o:(\d+)/', $definition, $matches);
-		return isset($matches[1]) ? (int) $matches[1] : PHP_INT_MAX; // Utilizza PHP_INT_MAX se non è presente un numero
+
+	protected function extractOrderNumberFromTableDefinition( $definition ) {
+		preg_match( '/o:(\d+)/', $definition, $matches );
+		return isset( $matches [ 1 ] ) ? ( int ) $matches [ 1 ] : PHP_INT_MAX; // Utilizza PHP_INT_MAX se non è presente un numero
 	}
-	
-	protected function chooseTableHeaderOrder(&$tableHeads){
-		usort($tableHeads, function($a, $b) {
-			$orderA = $this->extractOrderNumberFromTableDefinition($a['definition']);
-			$orderB = $this->extractOrderNumberFromTableDefinition($b['definition']);
+
+	protected function chooseTableHeaderOrder( &$tableHeads ) {
+		usort( $tableHeads, function ( $a, $b ) {
+			$orderA = $this->extractOrderNumberFromTableDefinition( $a [ 'definition' ] );
+			$orderB = $this->extractOrderNumberFromTableDefinition( $b [ 'definition' ] );
 			return $orderA <=> $orderB; // Ordinamento ascendente
-		});
+		} );
 		return $tableHeads;
 	}
-	
+
 	protected function initialized( ) {
 		$globali = $GLOBALS [ "lib_caricate" ];
 		return $GLOBALS [ "lib_caricate" ] [ get_class( $this ) ];
@@ -672,7 +679,7 @@ class Super_lib {
 	public function invia_email( $to = "", $subject = "", $body = "", $allegati = array() ) {
 		// Carico la configurazione...
 		$ci = get_instance();
-		$ci->config->load("email");
+		$ci->config->load( "email" );
 		return $this->invia_email_generica( $to, $subject, $body, $allegati );
 	}
 
@@ -681,8 +688,8 @@ class Super_lib {
 		require_once "{$_SERVER['DOCUMENT_ROOT']}/application/third_party/Mail/mime.php";
 		$headers = array (
 				'From' => "{$this->config->config["website_name"]} <{$this->config->config["generic_email"]}>",
-				'To' => xss_clean($to),
-				'Subject' => xss_clean($subject) 
+				'To' => xss_clean( $to ),
+				'Subject' => xss_clean( $subject ) 
 		);
 		if (trim( $bcc ) !== "") {
 			$headers [ "Bcc" ] = xss_clean( $bcc );
@@ -690,14 +697,14 @@ class Super_lib {
 		/**
 		 * Configurazione
 		 */
-		if ($this->config["mail_protocol"] == "ssl"){
-			$socket_options =  array (
-						"ssl" => array (
-								"verify_peer" => false,
-								"verify_peer_name" => false,
-								"allow_self_signed" => true 
-						) 
-				);
+		if ($this->config [ "mail_protocol" ] == "ssl") {
+			$socket_options = array (
+					"ssl" => array (
+							"verify_peer" => false,
+							"verify_peer_name" => false,
+							"allow_self_signed" => true 
+					) 
+			);
 		} else {
 			$socket_options = "";
 		}
@@ -708,9 +715,9 @@ class Super_lib {
 				"username" => "{$this->config["mail_username"]}", // your gmail account
 				"password" => "{$this->config["mail_password"]}", // your password
 				"debug" => false,
-				$socket_options
+				$socket_options 
 		) );
-		$body = xss_clean($body);
+		$body = xss_clean( $body );
 		$nohtml = strip_tags( $body );
 		$mime = new Mail_mime();
 		$mime->setTXTBody( $nohtml );
@@ -731,19 +738,19 @@ class Super_lib {
 		$mail = $smtp->send( $to, $headers, $body );
 		return $mail;
 	}
-	
-	protected function parseRecord(&$record){
+
+	protected function parseRecord( &$record ) {
 		$ordered_table_headers = $this->chooseTableHeaderOrder( $this->model->get_table_header() );
 		foreach ( $ordered_table_headers as $columnDefinition ) {
 			$column_name = $columnDefinition [ "name" ];
 			$def = explode( ",", $columnDefinition [ "definition" ] );
 			// If it's a Date, convert in the appropriate format
 			if (in_array( "d", $def )) {
-				$record[$column_name] = html_datetime_to_unix($record[$column_name]);
+				$record [ $column_name ] = html_datetime_to_unix( $record [ $column_name ] );
 			} elseif (in_array( "n", $def )) {
-				$record[$column_name] = intval($record[$column_name]);
+				$record [ $column_name ] = intval( $record [ $column_name ] );
 			} else {
-				$record[$column_name] = trim(xss_clean($record[$column_name]));
+				$record [ $column_name ] = trim( xss_clean( $record [ $column_name ] ) );
 			}
 		}
 	}

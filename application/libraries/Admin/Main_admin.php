@@ -4,7 +4,7 @@ if (! defined( 'BASEPATH' )) {
 }
 class Main_admin extends Super_lib {
 	public $model, $view;
-	protected $record_limit = 5, $options = array (), $ci;
+	protected $ci, $indexTemplate;
 
 	public function __construct( $params = null ) {
 		if ($params != null) {
@@ -14,7 +14,7 @@ class Main_admin extends Super_lib {
 		} else {
 			parent::__construct( $params );
 		}
-		$this->ci = get_instance();		
+		$this->ci = get_instance();
 		// Carico il model
 		$this->load->model_options( "Admin/model_admin", $params );
 		// Carico vista
@@ -26,6 +26,7 @@ class Main_admin extends Super_lib {
 		$this->model->super_lib = $this->super_lib;
 		$this->view = $this->main_admin_views;
 		$this->view->super_lib = $this->super_lib;
+		$this->indexTemplate = "{$_SERVER["DOCUMENT_ROOT"]}/application/index.html";
 	}
 
 	/**
@@ -33,10 +34,22 @@ class Main_admin extends Super_lib {
 	 * This is the default action upon login.
 	 * Build the administrations Menu and the help
 	 */
-	protected function index( ) {
-		if (! $this->is_admin() and ! $this->is_logged_in()) {
+	protected function index( $action = "homePage", $data = array() ) {
+		// No method, no party!
+		if (! method_exists( $this, $action )) {
+			return $this->error( "The method {$action} does NOT exists !!" );
+		}
+		// framework configured? No admin, no party!!
+		if (! $this->is_admin() and $this->is_frameworkConfigured()) {
 			return $this->error( "You are NOT allowed to access this class" );
 		}
+		return $this->$action( $data );
+	}
+
+	/**
+	 * PRIVATE FUNCTIONS
+	 */
+	private function homePage( ) {
 		$html = $this->view->build( "build_menu" );
 		$this->response->assign( "admin_menu_struct", "innerHTML", $html );
 		$help = $this->view->build( "main_admin_help" );
@@ -48,10 +61,7 @@ class Main_admin extends Super_lib {
 	 *
 	 * @return xajaxResponse
 	 */
-	protected function configure( ) {
-		if (! $this->is_admin() and ! $this->is_logged_in()) {
-			return $this->error( "You are NOT allowed to access this class" );
-		}
+	private function configureFrameworkOptions( ) {
 		$ci = get_instance();
 		$ci->config->load( "email", true );
 		// Presento le opzioni modificabili e le "possibilità" di creazione classi
@@ -70,16 +80,13 @@ class Main_admin extends Super_lib {
 	 *
 	 * @param number $step        	
 	 */
-	protected function install( $step = 1 ) {
-		if ($this->config->item( "framework_configured" ) !== false) {
-			return $this->error( "You are NOT allowed to access this class" );
-		}
+	private function installFramework( $step = 1 ) {
 		if (intval( $step ) === 1) {
 			$this->ci->config->load( "database", true );
 			$this->load_install_options();
 			$html = $this->view->build( "install_framework", $this->options );
 			// Show a varning about "default tables will be erased!"
-			$this->error( "By clicking on \'Test DB Connection\' the Framework will test the connection parameters you have provided and, if the connection to the Database is successful, the standard tables (if present) will be completely deleted and recreated!<br>If you don\'t want this, you have to manually edit the Framework configuration file (/application/config/framework.php) and fix <strong>\$config[\"framework_configured\"] = true;</strong> in the Framework configuration file (/application/config/framework.php).<br><br>Click ok to continue or wait 30 seconds", "WARNING - Read Carefully", 30000 );
+			$this->error( "By clicking on \'Test DB Connection\' the Framework will test the connection parameters you have provided and, if the connection to the Database is successful, the standard tables (if present) will be completely deleted and recreated!<br>If you don\'t want this, you have to manually edit the Framework configuration file (/application/config/framework.php) and fix <strong>\$config[\"framework_configured\"] = true;</strong> .<br><br>Click ok to continue or wait 30 seconds", "WARNING - Read Carefully", 30000 );
 		} elseif (intval( $step ) === 2) {
 			$html = $this->view->build( "create_default_user" );
 		}
@@ -94,10 +101,7 @@ class Main_admin extends Super_lib {
 	 *
 	 * @param array $form_input        	
 	 */
-	protected function save_user( $form_input ) {
-		if ($this->config->item( "framework_configured" ) !== false) {
-			return $this->error( "You are NOT allowed to access this class" );
-		}
+	private function saveAdminUser( $form_input ) {
 		$this->load->model( 'tank_auth/users' );
 		require_once ( "{$_SERVER['DOCUMENT_ROOT']}/application/helpers/PasswordHash.php" );
 		$this->build_dependency();
@@ -133,10 +137,7 @@ class Main_admin extends Super_lib {
 	 * @param array $form_input        	
 	 * @return boolean
 	 */
-	protected function test_db_connection( $form_input ) {
-		if ($this->config->item( "framework_configured" ) !== false) {
-			return $this->error( "You are NOT allowed to access this class" );
-		}
+	private function saveDbConfiguration( $form_input ) {
 		$this->ci->config->load( "database", true );
 		$this->load_install_options();
 		if (! $this->check_base_input( $form_input, "install" )) {
@@ -159,7 +160,7 @@ class Main_admin extends Super_lib {
 		if (! $this->update_config_and_initialize_db( $conn, $form_input )) {
 			return false;
 		}
-		$this->confirm_action( "Database connected", "The Db is configured.<br>Let go ahead and configure the Administrator!", "function() { xajax_execute('Admin/Main_admin', 'install', 2) }" );
+		$this->confirm_action( "Database connected", "The Db is configured.<br>Let go ahead and configure the Administrator!", "function() { xajax_execute('Admin/Main_admin', 'index', 'installFramework', 2) }" );
 		return true;
 	}
 
@@ -172,10 +173,7 @@ class Main_admin extends Super_lib {
 	 * @param string $immediate_redirect        	
 	 * @return boolean
 	 */
-	protected function change_config( $form_input, $action = "configure", $immediate_redirect = true ) {
-		if ($this->config->item( "framework_configured" ) !== false and ! $this->is_admin() and ! $this->is_logged_in()) {
-			return $this->error( "You are NOT allowed to access this class" );
-		}
+	private function saveFrameworkOptions( $form_input, $action = "configureFrameworkOptions", $immediate_redirect = true ) {
 		if ($form_input [ "discriminator" ] === "database") {
 			$this->load_install_options();
 		} else {
@@ -200,13 +198,13 @@ class Main_admin extends Super_lib {
 		if ($save === false) {
 			$this->error( "Cannot open file {$form_input["discriminator"]} for write. Please check the file permissions", "Error", "4000" );
 			if ($immediate_redirect) {
-				$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', '{$action}' ) } , 4100 ) " );
+				$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'index', '{$action}' ) } , 4100 ) " );
 			}
 			return false;
 		} else {
 			if ($immediate_redirect) {
 				$this->message( "The new configuration for {$form_input["discriminator"]} has been saved. Please wait while reloading", "Success", "3000" );
-				$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', '{$action}' ) } , 3100 ) " );
+				$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'index', '{$action}' ) } , 3100 ) " );
 			}
 		}
 		return true;
@@ -217,10 +215,7 @@ class Main_admin extends Super_lib {
 	 * Retrieve all the DataBase tables (except for the system ones, prefixed with "csd_"), check if exists the relative elements of LMV,
 	 * build the various dropdown and form
 	 */
-	protected function create_new_functionality_form( ) {
-		if (! $this->is_admin() and ! $this->is_logged_in()) {
-			return $this->error( "You are NOT allowed to access this class" );
-		}
+	private function buildFormNewFunctionality( ) {
 		// Show available and unused database tables
 		$tables = $this->model->get_db_tables();
 		// Create the naming fields
@@ -243,14 +238,11 @@ class Main_admin extends Super_lib {
 	 *
 	 * @param array $input        	
 	 */
-	protected function create_new_functionality( $input, $force = false ) {
-		if (! $this->is_admin() and ! $this->is_logged_in()) {
-			return $this->error( "You are NOT allowed to access this class" );
-		}
+	private function buildNewStructure( $input, $force = false ) {
 		// No check is done cause there are no "custom fields", except the existance of at least a model
 		if (! isset( $input [ "discriminator" ] ) or $input [ "discriminator" ] !== "functionality") {
 			$this->error( "You have an error in the form. Please try again and ensure the field \'discriminator\' is present", "Error", 4000 );
-			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'create_new_functionality_form') } , 4100 ) " );
+			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'index', 'buildFormNewFunctionality') } , 4100 ) " );
 			return false;
 		}
 		$library_name_U = ucfirst( strtolower( $input [ "functionality_table" ] ) );
@@ -260,20 +252,30 @@ class Main_admin extends Super_lib {
 			// Take the templates and create the structure!!
 			$this->buildFunctionalityStructure( $input [ "functionality_table" ] );
 		} else {
-			$this->confirm_action( "Discard all manual change", "The chosen table has already been used to create the basic structures<br>If you want to REBUILD the functionality and loose any manual change you do, press &apos;OK&apos;", "function() { xajax_execute('Admin/Main_admin', 'create_new_functionality', xajax.getFormValues('config_form_functionality', true), true) }" );
+			$this->confirm_action( "Discard all manual change", "The chosen table has already been used to create the basic structures<br>If you want to REBUILD the functionality and loose any manual change you do, press &apos;OK&apos;", "function() { xajax_execute('Admin/Main_admin', 'index', 'buildNewStructure', xajax.getFormValues('config_form_functionality', true), true) }" );
 			return false;
 		}
 		$this->message( "Functionality has been built right now!", "Success" );
 	}
 
-	/**
-	 * PRIVATE FUNCTIONS
-	 */
 	private function buildFunctionalityStructure( $table_name ) {
 		$library_name_U = ucfirst( strtolower( $table_name ) );
 		$library_name_L = strtolower( $library_name_U );
-		$index_file = "{$_SERVER["DOCUMENT_ROOT"]}/application/index.html";
 		// AjaxRequests
+		$this->buildAjaxStructure( $library_name_L, $library_name_U );
+		// Libraries
+		$this->buildLibraryStructure( $library_name_L, $library_name_U );
+		// Models
+		$this->buildModelStructure( $library_name_L, $library_name_U );
+		// Classes
+		$this->buildClassStructure( $library_name_L, $library_name_U );
+		// Views
+		$this->buildViewsStructure( $library_name_L, $library_name_U );
+		// Views_assembler
+		$this->buildAssemblerStructure( $library_name_L, $library_name_U );
+	}
+
+	private function buildAjaxStructure( $library_name_L, $library_name_U ) {
 		$ajax_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/controllers/ajax_requests/{$library_name_U}/";
 		$ajax_def = $this->load->view( "Templates/AjaxRequests/default.php", array (
 				"library_name_U" => $library_name_U,
@@ -281,8 +283,10 @@ class Main_admin extends Super_lib {
 		), true );
 		mkdir( $ajax_dir, 0755, true );
 		file_put_contents( "{$ajax_dir}/ajax_{$library_name_L}.php", $ajax_def );
-		copy( $index_file, "{$ajax_dir}/index.html" );
-		// Classes
+		copy( $this->indexTemplate, "{$ajax_dir}/index.html" );
+	}
+
+	private function buildClassStructure( $library_name_L, $library_name_U ) {
 		$class_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/";
 		$class_def = $this->load->view( "Templates/Classes/default.php", array (
 				"library_name_U" => $library_name_U,
@@ -290,8 +294,10 @@ class Main_admin extends Super_lib {
 		), true );
 		mkdir( $class_dir, 0755, true );
 		file_put_contents( "{$class_dir}/{$library_name_L}.php", $class_def );
-		copy( $index_file, "{$class_dir}/index.html" );
-		// Libraries
+		copy( $this->indexTemplate, "{$class_dir}/index.html" );
+	}
+
+	private function buildLibraryStructure( $library_name_L, $library_name_U ) {
 		$library_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/{$library_name_U}/";
 		$lib_def = $this->load->view( "Templates/Libraries/default.php", array (
 				"library_name_U" => $library_name_U,
@@ -299,8 +305,10 @@ class Main_admin extends Super_lib {
 		), true );
 		mkdir( $library_dir, 0755, true );
 		file_put_contents( "{$library_dir}/Main_{$library_name_L}.php", $lib_def );
-		copy( $index_file, "{$library_dir}/index.html" );
-		// Models
+		copy( $this->indexTemplate, "{$library_dir}/index.html" );
+	}
+
+	private function buildModelStructure( $library_name_L, $library_name_U ) {
 		$model_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$library_name_U}/";
 		$model_def = $this->load->view( "Templates/Models/default.php", array (
 				"library_name_U" => $library_name_U,
@@ -309,8 +317,10 @@ class Main_admin extends Super_lib {
 		), true );
 		mkdir( $model_dir, 0755, true );
 		file_put_contents( "{$model_dir}/model_{$library_name_L}.php", $model_def );
-		copy( $index_file, "{$model_dir}/index.html" );
-		// Views
+		copy( $this->indexTemplate, "{$model_dir}/index.html" );
+	}
+
+	private function buildViewsStructure( $library_name_L, $library_name_U ) {
 		$views_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/";
 		$view_struct_def = $this->load->view( "Templates/Views/general_structure.php", array (
 				"library_name_U" => $library_name_U,
@@ -331,8 +341,10 @@ class Main_admin extends Super_lib {
 				"table_name" => $table_name 
 		), true );
 		file_put_contents( "{$views_dir}/edit_structure.php", $table_edit_structure_def );
-		copy( $index_file, "{$views_dir}/index.html" );
-		// Views_assembler
+		copy( $this->indexTemplate, "{$views_dir}/index.html" );
+	}
+
+	private function buildAssemblerStructure( $library_name_L, $library_name_U ) {
 		$assembler_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/Views_assembler/{$library_name_U}/";
 		$views_assembler_def = $this->load->view( "Templates/Views_assembler/default.php", array (
 				"library_name_U" => $library_name_U,
@@ -340,7 +352,7 @@ class Main_admin extends Super_lib {
 		), true );
 		mkdir( $assembler_dir, 0755, true );
 		file_put_contents( "{$assembler_dir}/Main_{$library_name_L}_views.php", $views_assembler_def );
-		copy( $index_file, "{$assembler_dir}/index.html" );
+		copy( $this->indexTemplate, "{$assembler_dir}/index.html" );
 	}
 
 	/**
@@ -448,7 +460,7 @@ class Main_admin extends Super_lib {
 	}
 
 	private function update_config_and_initialize_db( $conn, $form_input ) {
-		if (! $this->change_config( $form_input, "install", false )) {
+		if (! $this->saveFrameworkOptions( $form_input, "install", false )) {
 			$conn->close();
 			return false;
 		} else {
@@ -469,13 +481,21 @@ class Main_admin extends Super_lib {
 
 	private function do_config_replacements( &$stream, $good_options, $form_input ) {
 		foreach ( $good_options as $key => $value ) {
-			// Xss clean of form input. $key and $value comes from config, so is already cleaned
-			$form_input [ "{$key}" ] = xss_clean( $form_input [ "{$key}" ] );
+			// XSS clean of form input. $key and $value comes from config, so are already cleaned
+			$clean_input_value = xss_clean( $form_input [ $key ] );
 			// Build pattern to search for and replacement
-			$pattern = "\$config[\"{$key}\"] = \"{$good_options["{$key}"]["value"]}\";";
-			$replace = "\$config[\"{$key}\"] = \"{$form_input["{$key}"]}\";";
-			if (stripos( $stream, $pattern ) !== false and $pattern != $replace) {
-				$stream = str_replace( $pattern, $replace, $stream );
+			$pattern = "\$config[\"{$key}\"] = \"{$value['value']}\";";
+			$replace = "\$config[\"{$key}\"] = \"{$clean_input_value}\";";
+			// If the pattern exists in the stream, replace it
+			if (stripos( $stream, $pattern ) !== false) {
+				if ($pattern != $replace) {
+					$stream = str_replace( $pattern, $replace, $stream );
+				}
+			} else {
+				// If the pattern doesn't exist, add the new key-value pair at the end of the config array
+				$insert_pattern = "\$config[\"{$key}\"] = \"{$clean_input_value}\";";
+				// Insert before the last closing tag
+				$stream = str_replace( "?>", "{$insert_pattern}\n?>", $stream );
 			}
 		}
 	}
@@ -493,23 +513,23 @@ class Main_admin extends Super_lib {
 		}
 	}
 
-	private function check_base_input( $form_input, $action = "index" ) {
+	private function check_base_input( $form_input, $action = "homePage" ) {
 		if (! isset( $form_input [ "discriminator" ] ) or trim( $form_input [ "discriminator" ] ) == "") {
 			$this->error( "You have an error in the form. Please try again and ensure the field \'discriminator\' is present", "Error", 4000 );
-			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', '{$action}') } , 4100 ) " );
+			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'index', '{$action}') } , 4100 ) " );
 			return false;
 		}
 		$good_options = $this->options [ $form_input [ "discriminator" ] ];
 		if (! sizeof( $good_options )) {
 			$this->error( "You have an error in the form. Please try again and ensure the field \'discriminator\' has a correct value", "Error", 4000 );
-			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', '{$action}') } , 4100 ) " );
+			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'index', '{$action}') } , 4100 ) " );
 			return false;
 		}
 		// Apro il file relativo
 		$stream = file_get_contents( "{$_SERVER['DOCUMENT_ROOT']}/application/config/{$form_input["discriminator"]}.php" );
 		if ($stream === false) {
 			$this->error( "Cannot open file {$form_input["discriminator"]} for read. Please check the existence of the file and its permissions", "Error", 4000 );
-			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', '{$action}') } , 4100 ) " );
+			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'index', '{$action}') } , 4100 ) " );
 			return false;
 		}
 		return array (
@@ -583,6 +603,16 @@ class Main_admin extends Super_lib {
 				"value" => $this->ci->config->config [ "site_name" ],
 				"Title" => "About Site Name",
 				"Popover" => "The name of your Framework/Site" 
+		);
+		$this->options [ "framework" ] [ "debug_enabled" ] = array (
+				"value" => $this->ci->config->config [ "debug_enabled" ],
+				"Title" => "About Debug Enabled",
+				"Popover" => "Use a minified Profiler for debugging and place a 'Show Debug' in the bottom right corner" 
+		);
+		$this->options [ "framework" ] [ "query_toggle_count" ] = array (
+				"value" => $this->ci->config->config [ "query_toggle_count" ],
+				"Title" => "About Query Count",
+				"Popover" => "Count the queryes and display them in Debug modal (see Debug Enabled)" 
 		);
 		// EMAIL OPTIONS
 		$this->options [ "email" ] [ "mail_host" ] = array (

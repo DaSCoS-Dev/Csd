@@ -85,12 +85,15 @@ class Main_admin_views extends CI_View_assembler {
 		$column_name = $definitions["column_name"];
 		// Open the form
 		$form = $this->open_config_form("functionality");
+		$options .= $this->form_select_element("0", "Select a Table");
 		foreach ($definitions["tables"] as $table){
 			$options .= $this->form_select_element($table->$column_name, $table->$column_name);
 		}
-		$form .= $this->form_select("1", "functionality_table", $options, "Select the Table to use");
+		// onchange/onselect, check if already created?
+		$action = "";
+		$form .= $this->form_select("1", "functionality_table", $options, "Select the Table to use", "form-select", $action);
 		// Submit button
-		$form .= $this->form_button_submit("submit_functionality", "Create Functionality", "Create Functionality", "onclick=\"xajax_execute('Admin/Main_admin', 'create_new_functionality', xajax.getFormValues('config_form_functionality', true));\"");
+		$form .= $this->form_button_submit("submit_functionality", "Create Functionality", "Create Functionality", "onclick=\"xajax_execute('Admin/Main_admin', 'index', 'buildNewStructure', xajax.getFormValues('config_form_functionality', true));\"");
 		// Close the form
 		$form .= $this->ci->load->view( "Common_views/close_form", array (), true );
 		// Put the form in the container
@@ -115,19 +118,19 @@ class Main_admin_views extends CI_View_assembler {
 	}
 	
 	private function build_submit_form_options_generic($file = ""){
-		return $this->form_button_submit("submit_{$file}", "Save", "Save", "onclick=\"xajax_execute('Admin/Main_admin', 'change_config', xajax.getFormValues('config_form_{$file}', true));\"");
+		return $this->form_button_submit("submit_{$file}", "Save", "Save", "onclick=\"xajax_execute('Admin/Main_admin', 'index', 'saveFrameworkOptions', xajax.getFormValues('config_form_{$file}', true));\"");
 	}
 	
 	private function build_submit_form_install_framework($file = "", $step = 1){
 		switch (intval($step)) {
 			case 1:
-				$function = " xajax_execute('Admin/Main_admin', 'test_db_connection', xajax.getFormValues('config_form_{$file}', true))  ";				
+				$function = " xajax_execute('Admin/Main_admin', 'index', 'saveDbConfiguration', xajax.getFormValues('config_form_{$file}', true))  ";				
 				$confirm = "modal_confirm('Confim', 'If the Db already Exsts, it will be DESTRUCTED and recreated!<br>Are you sure?', function(){ {$function} } ) ";
 				$condition = " function() { if ( $('#force_db_creation').is(':checked') ) { {$confirm} } else { {$function} } }";
 				$submit = $this->form_button_submit("submit_{$file}", "Test DB Connection", "Test DB Connection", "onclick=\" validateFormAndExecute ('config_form_{$file}', {$condition} )\"");
 			break;
 			case 2:
-				$submit = $this->form_button_submit("submit_{$file}", "Create Administrator", "Create Administrator", "onclick=\"xajax_execute('Admin/Main_admin', 'save_user', xajax.getFormValues('config_form_{$file}', true));\"");
+				$submit = $this->form_button_submit("submit_{$file}", "Create Administrator", "Create Administrator", "onclick=\"xajax_execute('Admin/Main_admin', 'index', 'saveAdminUser', xajax.getFormValues('config_form_{$file}', true));\"");
 			break;
 			default:
 				;
