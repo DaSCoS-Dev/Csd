@@ -75,9 +75,11 @@ $autoload [ "helper" ] = array (
 		"cript",
 		"ajax",
 		"string",
+
 		"date",
 		"form",
 		"security"
+
 );
 
 /*
