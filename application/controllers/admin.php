@@ -1,14 +1,14 @@
 <?php
 if (! defined( 'BASEPATH' ))
 	exit( 'No direct script access allowed' );
-
 class Admin extends CI_Controller {
 	protected $segments = array ();
 	public $left = "", $right = "", $scripts = array (), $styles = array (), $meta = array (), $super_lib = null, $view_assembler = null, $input_headers = null;
 
 	public function __construct( ) {
-		parent::__construct();
-		// setlocale(LC_MONETARY, 'it_IT');
+		GLOBAL $BM;
+		$BM->mark( "Csd_enter" );
+		parent::__construct();		
 		$this->segments = $this->uri->segments;
 		// Recupero l'input
 		$this->input_vars = $this->input->post();
@@ -23,7 +23,7 @@ class Admin extends CI_Controller {
 		// Carico xajax
 		if (! isset( $this->mainxajax ) or $this->mainxajax == null) {
 			$this->load->library( "xajax/mainXajax" );
-		}
+		}		
 		$this->super_lib->mainxajax = $this->mainxajax;
 	}
 

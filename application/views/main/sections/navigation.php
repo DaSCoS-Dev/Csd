@@ -31,6 +31,7 @@ $output = <<<EOF
         </li>
       </ul>
      <ul class="navbar-nav" id="admin_menu_struct"></ul>
+	 <ul class="navbar-nav" id="user_menu_struct"></ul>
     </div>
   </div>
 </nav>
