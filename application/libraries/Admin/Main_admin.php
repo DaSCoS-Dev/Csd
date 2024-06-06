@@ -14,7 +14,7 @@ class Main_admin extends Super_lib {
 		} else {
 			parent::__construct( $params );
 		}
-		$this->ci = get_instance();		
+		$this->ci = get_instance();
 		// Carico il model
 		$this->load->model_options( "Admin/model_admin", $params );
 		// Carico vista
@@ -34,29 +34,28 @@ class Main_admin extends Super_lib {
 	 * This is the default action upon login.
 	 * Build the administrations Menu and the help
 	 */
-	protected function index( $action = "homePage", $data = array()) {
+	protected function index( $action = "homePage", $data = array() ) {
 		// No method, no party!
-		if (!method_exists($this, $action)){
+		if (! method_exists( $this, $action )) {
 			return $this->error( "The method {$action} does NOT exists !!" );
 		}
 		// framework configured? No admin, no party!!
 		if (! $this->is_admin() and $this->is_frameworkConfigured()) {
 			return $this->error( "You are NOT allowed to access this class" );
 		}
-		return $this->$action($data);		
+		return $this->$action( $data );
 	}
 
 	/**
 	 * PRIVATE FUNCTIONS
 	 */
-	
-	private function homePage(){
+	private function homePage( ) {
 		$html = $this->view->build( "build_menu" );
 		$this->response->assign( "admin_menu_struct", "innerHTML", $html );
 		$help = $this->view->build( "main_admin_help" );
 		$this->show_html( $help );
 	}
-	
+
 	/**
 	 * The Admin choose to change something about the main configuration of Framework
 	 *
@@ -261,101 +260,101 @@ class Main_admin extends Super_lib {
 
 	private function buildFunctionalityStructure( $table_name ) {
 		$library_name_U = ucfirst( strtolower( $table_name ) );
-		$library_name_L = strtolower( $library_name_U );		
+		$library_name_L = strtolower( $library_name_U );
 		// AjaxRequests
-		$this->buildAjaxStructure($library_name_L, $library_name_U);		
+		$this->buildAjaxStructure( $library_name_L, $library_name_U );
 		// Libraries
-		$this->buildLibraryStructure($library_name_L, $library_name_U);
+		$this->buildLibraryStructure( $library_name_L, $library_name_U );
 		// Models
-		$this->buildModelStructure($library_name_L, $library_name_U);
+		$this->buildModelStructure( $library_name_L, $library_name_U );
 		// Classes
-		$this->buildClassStructure($library_name_L, $library_name_U);
+		$this->buildClassStructure( $library_name_L, $library_name_U );
 		// Views
-		$this->buildViewsStructure($library_name_L, $library_name_U);
+		$this->buildViewsStructure( $library_name_L, $library_name_U );
 		// Views_assembler
-		$this->buildAssemblerStructure($library_name_L, $library_name_U);
+		$this->buildAssemblerStructure( $library_name_L, $library_name_U );
 	}
 
-	private function buildAjaxStructure($library_name_L, $library_name_U){
+	private function buildAjaxStructure( $library_name_L, $library_name_U ) {
 		$ajax_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/controllers/ajax_requests/{$library_name_U}/";
 		$ajax_def = $this->load->view( "Templates/AjaxRequests/default.php", array (
 				"library_name_U" => $library_name_U,
-				"library_name_L" => $library_name_L
+				"library_name_L" => $library_name_L 
 		), true );
 		mkdir( $ajax_dir, 0755, true );
 		file_put_contents( "{$ajax_dir}/ajax_{$library_name_L}.php", $ajax_def );
 		copy( $this->indexTemplate, "{$ajax_dir}/index.html" );
 	}
-	
-	private function buildClassStructure($library_name_L, $library_name_U){
+
+	private function buildClassStructure( $library_name_L, $library_name_U ) {
 		$class_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/";
 		$class_def = $this->load->view( "Templates/Classes/default.php", array (
 				"library_name_U" => $library_name_U,
-				"library_name_L" => $library_name_L
+				"library_name_L" => $library_name_L 
 		), true );
 		mkdir( $class_dir, 0755, true );
 		file_put_contents( "{$class_dir}/{$library_name_L}.php", $class_def );
 		copy( $this->indexTemplate, "{$class_dir}/index.html" );
 	}
-	
-	private function buildLibraryStructure($library_name_L, $library_name_U){
+
+	private function buildLibraryStructure( $library_name_L, $library_name_U ) {
 		$library_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/{$library_name_U}/";
 		$lib_def = $this->load->view( "Templates/Libraries/default.php", array (
 				"library_name_U" => $library_name_U,
-				"library_name_L" => $library_name_L
+				"library_name_L" => $library_name_L 
 		), true );
 		mkdir( $library_dir, 0755, true );
 		file_put_contents( "{$library_dir}/Main_{$library_name_L}.php", $lib_def );
 		copy( $this->indexTemplate, "{$library_dir}/index.html" );
 	}
-	
-	private function buildModelStructure($library_name_L, $library_name_U){
+
+	private function buildModelStructure( $library_name_L, $library_name_U ) {
 		$model_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$library_name_U}/";
 		$model_def = $this->load->view( "Templates/Models/default.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L,
-				"table_name" => $table_name
+				"table_name" => $table_name 
 		), true );
 		mkdir( $model_dir, 0755, true );
 		file_put_contents( "{$model_dir}/model_{$library_name_L}.php", $model_def );
 		copy( $this->indexTemplate, "{$model_dir}/index.html" );
 	}
-	
-	private function buildViewsStructure($library_name_L, $library_name_U){
+
+	private function buildViewsStructure( $library_name_L, $library_name_U ) {
 		$views_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/views/{$library_name_U}/";
 		$view_struct_def = $this->load->view( "Templates/Views/general_structure.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L,
-				"table_name" => $table_name
+				"table_name" => $table_name 
 		), true );
 		mkdir( $views_dir, 0755, true );
 		file_put_contents( "{$views_dir}/general_structure.php", $view_struct_def );
 		$table_struct_def = $this->load->view( "Templates/Views/table_structure.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L,
-				"table_name" => $table_name
+				"table_name" => $table_name 
 		), true );
 		file_put_contents( "{$views_dir}/table_structure.php", $table_struct_def );
 		$table_edit_structure_def = $this->load->view( "Templates/Views/edit_structure.php", array (
 				"library_name_U" => $library_name_U,
 				"library_name_L" => $library_name_L,
-				"table_name" => $table_name
+				"table_name" => $table_name 
 		), true );
 		file_put_contents( "{$views_dir}/edit_structure.php", $table_edit_structure_def );
 		copy( $this->indexTemplate, "{$views_dir}/index.html" );
 	}
-	
-	private function buildAssemblerStructure($library_name_L, $library_name_U){
+
+	private function buildAssemblerStructure( $library_name_L, $library_name_U ) {
 		$assembler_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/libraries/Views_assembler/{$library_name_U}/";
 		$views_assembler_def = $this->load->view( "Templates/Views_assembler/default.php", array (
 				"library_name_U" => $library_name_U,
-				"library_name_L" => $library_name_L
+				"library_name_L" => $library_name_L 
 		), true );
 		mkdir( $assembler_dir, 0755, true );
 		file_put_contents( "{$assembler_dir}/Main_{$library_name_L}_views.php", $views_assembler_def );
 		copy( $this->indexTemplate, "{$assembler_dir}/index.html" );
 	}
-	
+
 	/**
 	 * Check if, inside the relative "configuratios file", we already have this table
 	 *
@@ -482,13 +481,21 @@ class Main_admin extends Super_lib {
 
 	private function do_config_replacements( &$stream, $good_options, $form_input ) {
 		foreach ( $good_options as $key => $value ) {
-			// Xss clean of form input. $key and $value comes from config, so is already cleaned
-			$form_input [ "{$key}" ] = xss_clean( $form_input [ "{$key}" ] );
+			// XSS clean of form input. $key and $value comes from config, so are already cleaned
+			$clean_input_value = xss_clean( $form_input [ $key ] );
 			// Build pattern to search for and replacement
-			$pattern = "\$config[\"{$key}\"] = \"{$good_options["{$key}"]["value"]}\";";
-			$replace = "\$config[\"{$key}\"] = \"{$form_input["{$key}"]}\";";
-			if (stripos( $stream, $pattern ) !== false and $pattern != $replace) {
-				$stream = str_replace( $pattern, $replace, $stream );
+			$pattern = "\$config[\"{$key}\"] = \"{$value['value']}\";";
+			$replace = "\$config[\"{$key}\"] = \"{$clean_input_value}\";";
+			// If the pattern exists in the stream, replace it
+			if (stripos( $stream, $pattern ) !== false) {
+				if ($pattern != $replace) {
+					$stream = str_replace( $pattern, $replace, $stream );
+				}
+			} else {
+				// If the pattern doesn't exist, add the new key-value pair at the end of the config array
+				$insert_pattern = "\$config[\"{$key}\"] = \"{$clean_input_value}\";";
+				// Insert before the last closing tag
+				$stream = str_replace( "?>", "{$insert_pattern}\n?>", $stream );
 			}
 		}
 	}
@@ -596,6 +603,16 @@ class Main_admin extends Super_lib {
 				"value" => $this->ci->config->config [ "site_name" ],
 				"Title" => "About Site Name",
 				"Popover" => "The name of your Framework/Site" 
+		);
+		$this->options [ "framework" ] [ "debug_enabled" ] = array (
+				"value" => $this->ci->config->config [ "debug_enabled" ],
+				"Title" => "About Debug Enabled",
+				"Popover" => "Use a minified Profiler for debugging and place a 'Show Debug' in the bottom right corner" 
+		);
+		$this->options [ "framework" ] [ "query_toggle_count" ] = array (
+				"value" => $this->ci->config->config [ "query_toggle_count" ],
+				"Title" => "About Query Count",
+				"Popover" => "Count the queryes and display them in Debug modal (see Debug Enabled)" 
 		);
 		// EMAIL OPTIONS
 		$this->options [ "email" ] [ "mail_host" ] = array (
