@@ -117,11 +117,12 @@ CREATE TABLE `csd_user_profiles` (
 
 DROP TABLE IF EXISTS `csd_keys`;
 CREATE TABLE `csd_keys` (
-  `id` int(11) NOT NULL,
+  `id` int(11) UNSIGNED NOT NULL,
   `user_id` int(11) UNSIGNED DEFAULT NULL,
+  `expiration_date` int(11) UNSIGNED NOT NULL,
   `key` varchar(40) NOT NULL,
-  `ip_addresses` text DEFAULT NULL,
-  `expiration_date` int(11) NOT NULL
+  `code` tinytext NOT NULL,
+  `ip_addresses` tinytext DEFAULT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
