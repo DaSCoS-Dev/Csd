@@ -62,9 +62,18 @@ class Main_{$library_name_L} extends Super_lib {
 		\$table_headers = \$this->model->get_table_header();
 		\$this->chooseTableHeaderOrder(\$table_headers);
 		\$model_name = get_class(\$this->model);
-		foreach (\$table_headers as \$idx => \$header){
-			\$tableHeads .= \$this->view->build( "table_header", array("headers" => \$header, "model" => \$model_name ));	
-			\$this->chooseTableHeaderVisibility(\$header, \$idx, \$visibility_options);
+		// We have to "try", cause we can have relations but NOT corresponding model....
+		try {
+			foreach ( \$table_headers as \$idx => \$header ) {
+				\$tableHeads .= \$this->view->build( "table_header", array (
+						"headers" => \$header,
+						"model" => \$model_name 
+				) );
+				\$this->chooseTableHeaderVisibility( \$header, \$idx, \$visibility_options );
+			}
+		} catch ( Exception \$e ) {
+			\$this->error( \$e->getMessage(), "We got a BIG prolem...", 10000 );
+			return false;
 		}
 		if (sizeof(\$visibility_options) > 0){
 			\$visibility_options = "," . implode(",", \$visibility_options);

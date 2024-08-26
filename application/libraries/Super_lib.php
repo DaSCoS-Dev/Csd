@@ -76,6 +76,7 @@ class Super_lib {
 	}
 
 	protected function set_local_storage( $id = 0 ) {
+		$ip = $this->getClientIP();
 		if (! isset( $this->profilo_utente->Codice )) {
 			$this->check_unique_user_code();
 			$this->profilo_utente->ID = 0;

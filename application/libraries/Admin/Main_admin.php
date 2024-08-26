@@ -238,24 +238,30 @@ class Main_admin extends Super_lib {
 	 *
 	 * @param array $input        	
 	 */
-	private function buildNewStructure( $input, $force = false ) {
+	private function buildNewStructure( $input ) {
 		// No check is done cause there are no "custom fields", except the existance of at least a model
 		if (! isset( $input [ "discriminator" ] ) or $input [ "discriminator" ] !== "functionality") {
 			$this->error( "You have an error in the form. Please try again and ensure the field \'discriminator\' is present", "Error", 4000 );
 			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'index', 'buildFormNewFunctionality') } , 4100 ) " );
 			return false;
-		}
+		}		
 		$library_name_U = ucfirst( strtolower( $input [ "functionality_table" ] ) );
 		$library_name_L = strtolower( $library_name_U );
-		$just_done = file_exists( "{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/{$library_name_L}.php" );
-		if (! $just_done or $force) {
-			// Take the templates and create the structure!!
-			$this->buildFunctionalityStructure( $input [ "functionality_table" ] );
-		} else {
-			$this->confirm_action( "Discard all manual change", "The chosen table has already been used to create the basic structures<br>If you want to REBUILD the functionality and loose any manual change you do, press &apos;OK&apos;", "function() { xajax_execute('Admin/Main_admin', 'index', 'buildNewStructure', xajax.getFormValues('config_form_functionality', true), true) }" );
+		if ($library_name_L == "0" or $library_name_U == "0"){
+			$this->error( "You have an error in the form. Please select a Table", "Error", 4000 );
+			$this->response->script( " setTimeout( function() { xajax_execute('Admin/Main_admin', 'index', 'buildFormNewFunctionality') } , 4100 ) " );
 			return false;
 		}
-		$this->message( "Functionality has been built right now!", "Success" );
+		$just_done = file_exists( "{$_SERVER["DOCUMENT_ROOT"]}/application/classes/{$library_name_U}/{$library_name_L}.php" );
+		if (! $just_done or $input [ "forceOverwrite" ] == "true") {
+			// Take the templates and create the structure!!
+			$this->buildFunctionalityStructure( $input [ "functionality_table" ] );
+			$this->response->script(" $('#forceOverwrite').val('false'); ");
+		} else {
+			$this->confirm_action( "Discard all manual change", "The chosen table has already been used to create the basic structures<br>If you want to REBUILD the functionality and loose any manual change you did, press &apos;OK&apos;", "function() { $(\"#forceOverwrite \").val('true'); xajax_execute('Admin/Main_admin', 'index', 'buildNewStructure', xajax.getFormValues('config_form_functionality', true)) }" );
+			return false;
+		}
+		$this->message( "Functionality has been built right now!<br>To test, open a consolle in browser and execute: xajax_execute(\'{$library_name_U}/Main_{$library_name_L}\', \'index\');", "Success" );
 	}
 
 	private function buildFunctionalityStructure( $table_name ) {
@@ -266,7 +272,7 @@ class Main_admin extends Super_lib {
 		// Libraries
 		$this->buildLibraryStructure( $library_name_L, $library_name_U );
 		// Models
-		$this->buildModelStructure( $library_name_L, $library_name_U );
+		$this->buildModelStructure( $library_name_L, $library_name_U, $table_name );
 		// Classes
 		$this->buildClassStructure( $library_name_L, $library_name_U );
 		// Views
@@ -308,7 +314,7 @@ class Main_admin extends Super_lib {
 		copy( $this->indexTemplate, "{$library_dir}/index.html" );
 	}
 
-	private function buildModelStructure( $library_name_L, $library_name_U ) {
+	private function buildModelStructure( $library_name_L, $library_name_U, $table_name ) {
 		$model_dir = "{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$library_name_U}/";
 		$model_def = $this->load->view( "Templates/Models/default.php", array (
 				"library_name_U" => $library_name_U,
