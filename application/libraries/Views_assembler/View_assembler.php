@@ -6,17 +6,23 @@ class CI_View_assembler {
 	public $ci, $data, $base_url, $brow_type, $model_table_name;
 
 	public function __construct( $params = null ) {
+		$this->benchmark();
 		if ($params != null) {
 			foreach ( $params as $var => $value ) {
 				$this->$var = $value;
 			}
-		}
-		$this->ci = get_instance();
+		}		
 		$this->base_url = base_url();
 		// Costruisco le dipendenze
 		$this->build_dependency();
 	}
 
+	private function benchmark($type = "enter"){
+		$name = get_class( $this );
+		$this->ci = get_instance();
+		$this->ci->benchmark->mark( "Csd_{$name}_{$type}" );
+	}
+	
 	public function index( $left = "", $right = "", $scripts = array(), $styles = array(), $meta = array() ) {
 		if (isset( $this->ci->main_entry_point->data [ "xajax" ] )) {
 			$xajax = $this->ci->main_entry_point->data [ "xajax" ];
@@ -332,6 +338,11 @@ class CI_View_assembler {
 		$joinedTableModel = strtolower("model_{$foreign_table}");
 		if ($foreign_table !== null && $this->ci->$joinedTableModel == null) {
 			$ucfirst = ucfirst( strtolower($foreign_table ));
+			// Check if the file exists, otherwise we got errors....
+			$just_done = file_exists( "{$_SERVER["DOCUMENT_ROOT"]}/application/models/{$ucfirst}/{$joinedTableModel}.php" );
+			if (!$just_done){
+				throw new Exception("NOT FOUND!<br>The table structure for \'{$this->model_table_name}\' includes a relationship with another table ({$foreign_table}) but the corresponding model has not been created (yet?)...", 404);
+			}
 			$this->ci->super_lib->load->model( "{$ucfirst}/{$joinedTableModel}" );
 			$this->ci->super_lib->build_dependency();
 		}

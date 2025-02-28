@@ -30,6 +30,7 @@ class Super_model extends CI_Model {
 	 */
 	public function __construct( $params = null ) {
 		global $CFG;
+		$this->benchmark();
 		$framework_configured = $CFG->item( "framework_configured" );
 		// Se arrivano dei parametri (array)...
 		if ($params != null) {
@@ -57,6 +58,12 @@ class Super_model extends CI_Model {
 		$this->use_phpmyadmin_features = $this->config->item( "use_phpmyadmin_features" );
 	}
 
+	private function benchmark($type = "enter"){
+		$name = get_class( $this );
+		$ci = get_instance();
+		$ci->benchmark->mark( "Csd_{$name}_{$type}" );
+	}
+	
 	/**
 	 * PUBLIC functions, callable "outside" the models.
 	 * Use only if absolutely necessary or if you don't (still?) have a specific Model

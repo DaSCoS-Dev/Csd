@@ -12,12 +12,12 @@ $output = <<<EOF
           <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkAdmin">
             <li>
 				<span class="dropdown-item" id="admin_configure" data-bs-toggle="collapse" data-bs-target=".navbar-collapse.show">
-					<button type="button" class="btn" id="admin_configure_actions" onclick="xajax_execute('Admin/Main_admin', 'configure')">Configure Main Options</button>
+					<button type="button" class="btn" id="admin_configure_actions" onclick="xajax_execute('Admin/Main_admin', 'index', 'configureFrameworkOptions')">Configure Main Options</button>
 				</span>
 			</li>
 			<li>
 				<span class="dropdown-item" id="admin_new_functionality" data-bs-toggle="collapse" data-bs-target=".navbar-collapse.show">
-					<button type="button" class="btn" id="admin_new_functionality_actions" onclick="xajax_execute('Admin/Main_admin', 'create_new_functionality_form')">Build New Function</button>
+					<button type="button" class="btn" id="admin_new_functionality_actions" onclick="xajax_execute('Admin/Main_admin', 'index', 'buildFormNewFunctionality')">Build New Function</button>
 				</span>
 			</li>
           </ul>

@@ -76,7 +76,8 @@ $autoload [ "helper" ] = array (
 		"ajax",
 		"string",
 		"date",
-		"form"
+		"form",
+		"security"
 );
 
 /*

@@ -125,6 +125,9 @@ class Auth extends Super_lib {
 	 * @return void
 	 */
 	function logout( ) {
+		if (!isset($this->tank_auth->profilo_utente)){
+			$this->tank_auth->profilo_utente = $this->profilo_utente;
+		}
 		$this->tank_auth->logout();
 		// Resetto Session, ID e Opzioni. Il resto va bene così
 		$this->profilo_utente->ID = 0;

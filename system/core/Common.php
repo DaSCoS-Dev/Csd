@@ -307,7 +307,8 @@ if ( ! function_exists('show_error'))
 	{
 		$_error =& load_class('Exceptions', 'core');
 		echo $_error->show_error($heading, $message, 'error_general', $status_code);
-		exit;
+		//exit;
+		throw new Exception($message, $status_code);
 	}
 }
 

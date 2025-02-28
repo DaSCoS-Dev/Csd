@@ -5,6 +5,7 @@ if ( ! defined('BASEPATH')) {
 if (isset($hidden) and trim($hidden) !== ""){
 	$hidden_field =<<<EOF
 	<input type="hidden" id="discriminator" name="discriminator" value="{$hidden}">
+	<input type="hidden" id="forceOverwrite" name="forceOverwrite" value="false">
 EOF
 ;
 } else {

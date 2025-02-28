@@ -149,6 +149,11 @@ class xajaxResponseManager {
 				$this->objResponse->debug( $sMessage );
 			}
 			$this->aDebugMessages = array ();
+			if ($this->objResponse->objPluginManager->ci->config->item( "debug_enabled" )) {
+				// Scrivo in consolle il tempo che ci ho messo....
+				$profilerOutput = $this->objResponse->objPluginManager->ci->profiler->run();
+				$this->objResponse->assign( "debugger_text", "innerHTML", $profilerOutput );
+			}
 			$this->objResponse->printOutput();
 		}
 	}
