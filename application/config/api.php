@@ -14,7 +14,7 @@ $config["api_error_codes"] = array(
 		"405.0" => "Method not allowed: %extra%",
 		"406.0" => "Not Acceptable. %extra%",
 		"408.0" => "Request Timeout: the auth_key has expired. Request a new one via get_auth",
-		"409.0" => "!! You cannot reference myself (tiny.top) !!",
+		"409.0" => "!! You cannot reference myself!!",
 );
 // REST / API
 $config['rest_keys_table'] = 'csd_keys';
